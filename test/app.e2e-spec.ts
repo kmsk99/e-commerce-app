@@ -9,7 +9,7 @@ import { CartModule } from './../src/cart/cart.module';
 import { ProductModule } from './../src/product/product.module';
 import { CartItemModule } from './../src/cart-item/cart-item.module';
 import { OrderModule } from './../src/order/order.module';
-import { OrderItemsModule } from './../src/order-items/order-items.module';
+import { OrderItemsModule } from '../src/order-item/order-item.module';
 import { PaymentModule } from './../src/payment/payment.module';
 
 describe('AppController (e2e)', () => {

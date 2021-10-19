@@ -7,7 +7,7 @@ import { CartModule } from './cart/cart.module';
 import { ProductModule } from './product/product.module';
 import { CartItemModule } from './cart-item/cart-item.module';
 import { OrderModule } from './order/order.module';
-import { OrderItemsModule } from './order-items/order-items.module';
+import { OrderItemsModule } from './order-item/order-item.module';
 import { PaymentModule } from './payment/payment.module';
 
 @Module({

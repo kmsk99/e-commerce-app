@@ -1,5 +1,5 @@
-import { ProductEntity } from 'src/product/entities/product.entity';
-import { UserEntity } from 'src/users/entities/user.entity';
+import { ProductEntity } from '@root/product/entities/product.entity';
+import { UsersEntity } from '@root/users/entities/users.entity';
 import {
   CreateDateColumn,
   Entity,
@@ -20,7 +20,7 @@ export class CartItemEntity {
   @JoinColumn({ name: 'product_id' })
   product_id: number;
 
-  @ManyToOne(() => UserEntity, (user) => user.id)
+  @ManyToOne(() => UsersEntity, (users) => users.id)
   @JoinColumn({ name: 'user_id' })
   userId: number;
 

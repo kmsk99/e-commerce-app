@@ -1,4 +1,4 @@
-import { UserEntity } from 'src/users/entities/user.entity';
+import { UsersEntity } from '@root/users/entities/users.entity';
 import {
   Column,
   CreateDateColumn,
@@ -15,7 +15,7 @@ export class CartEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => UserEntity, (user) => user.id)
+  @ManyToOne(() => UsersEntity, (users) => users.id)
   @JoinColumn({ name: 'user_id' })
   userId: number;
 

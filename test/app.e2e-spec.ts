@@ -1,16 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserEntity } from './../src/users/entities/user.entity';
-import { UsersModule } from './../src/users/users.module';
+import { UsersEntity } from '@root/users/entities/users.entity';
+import { UsersModule } from '@root/users/users.module';
 import { Connection } from 'typeorm';
-import { CartModule } from './../src/cart/cart.module';
-import { ProductModule } from './../src/product/product.module';
-import { CartItemModule } from './../src/cart-item/cart-item.module';
-import { OrderModule } from './../src/order/order.module';
-import { OrderItemsModule } from '../src/order-item/order-item.module';
-import { PaymentModule } from './../src/payment/payment.module';
+import { CartModule } from '@root/cart/cart.module';
+import { ProductModule } from '@root/product/product.module';
+import { CartItemModule } from '@root/cart-item/cart-item.module';
+import { OrderModule } from '@root/order/order.module';
+import { OrderItemsModule } from '@root/order-item/order-item.module';
+import { PaymentModule } from '@root/payment/payment.module';
+import { CartEntity } from '@root/cart/entities/cart.entity';
+import { CartItemEntity } from '@root/cart-item/entities/cart-item.entity';
+import { OrderEntity } from '@root/order/entities/order.entity';
+import { OrderItemEntity } from '@root/order-item/entities/order-item.entity';
+import { PaymentEntity } from '@root/payment/entities/payment.entity';
+import { ProductEntity } from '@root/product/entities/product.entity';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
@@ -32,7 +38,15 @@ describe('AppController (e2e)', () => {
           username: 'postgres',
           password: 'postgres',
           database: 'e2e_test',
-          entities: [UserEntity],
+          entities: [
+            UsersEntity,
+            CartEntity,
+            CartItemEntity,
+            OrderEntity,
+            OrderItemEntity,
+            PaymentEntity,
+            ProductEntity,
+          ],
           logging: true,
           synchronize: true,
         }),
@@ -41,6 +55,13 @@ describe('AppController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     // app.useLogger(new TestLogger()) // more on this line is below
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    );
     await app.init();
 
     const connection = app.get(Connection);
@@ -92,6 +113,58 @@ describe('AppController (e2e)', () => {
               error: 'UserName is already exists',
             });
         });
+
+        it('username too short', () => {
+          return request(app.getHttpServer())
+            .post('/users/register')
+            .send({
+              username: 'abc',
+              email: 'abcd@naver.com',
+              password: '12345678',
+            })
+            .expect(400)
+            .expect({
+              statusCode: 400,
+              message: [
+                'username must be longer than or equal to 4 characters',
+              ],
+              error: 'Bad Request',
+            });
+        });
+
+        it('username too long', () => {
+          return request(app.getHttpServer())
+            .post('/users/register')
+            .send({
+              username: '123456789012345678901234567890123',
+              email: 'abcd@naver.com',
+              password: '12345678',
+            })
+            .expect(400)
+            .expect({
+              statusCode: 400,
+              message: [
+                'username must be shorter than or equal to 32 characters',
+              ],
+              error: 'Bad Request',
+            });
+        });
+
+        it('email is not valid', () => {
+          return request(app.getHttpServer())
+            .post('/users/register')
+            .send({
+              username: 'abcd',
+              email: 'abcd@com',
+              password: '12345678',
+            })
+            .expect(400)
+            .expect({
+              statusCode: 400,
+              message: ['email must be an email'],
+              error: 'Bad Request',
+            });
+        });
       });
     });
 
@@ -130,7 +203,7 @@ describe('AppController (e2e)', () => {
     it.todo('POST');
   });
 
-  describe('/orders', () => {
+  describe('/order', () => {
     it.todo('GET');
     describe('/{orderId}', () => {
       it.todo('GET');

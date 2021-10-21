@@ -1,4 +1,4 @@
-import { PaymentEntity } from 'src/payment/entities/payment.entity';
+import { PaymentEntity } from '@root/payment/entities/payment.entity';
 import {
   JoinColumn,
   ManyToOne,
@@ -8,14 +8,14 @@ import {
   UpdateDateColumn,
   Entity,
 } from 'typeorm';
-import { UserEntity } from '../../users/entities/user.entity';
+import { UsersEntity } from '../../users/entities/users.entity';
 
 @Entity('order')
 export class OrderEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => UserEntity, (user) => user.id)
+  @ManyToOne(() => UsersEntity, (users) => users.id)
   @JoinColumn({ name: 'user_id' })
   userId: number;
 

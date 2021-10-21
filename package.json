@@ -30,6 +30,7 @@
     "@nestjs/typeorm": "^8.0.2",
     "@types/dotenv": "^8.2.0",
     "argon2": "^0.28.2",
+    "class-transformer": "^0.4.0",
     "class-validator": "^0.13.1",
     "dotenv": "^10.0.0",
     "passport": "^0.4.1",
@@ -71,6 +72,9 @@
       "ts"
     ],
     "rootDir": "src",
+    "moduleNameMapper": {
+      "^@root/(.*)$": "<rootDir>/$1"
+    },
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"

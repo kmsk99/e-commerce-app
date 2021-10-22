@@ -30,13 +30,16 @@ export class UsersController {
     return this.usersService.findOne(username);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  @Patch(':username')
+  update(
+    @Param('username') username: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    return this.usersService.update(username, updateUserDto);
   }
 
-  @Delete('')
-  remove(@Body('email') email: string) {
-    return this.usersService.remove(email);
+  @Delete()
+  remove(@Body('username') username: string) {
+    return this.usersService.remove(username);
   }
 }

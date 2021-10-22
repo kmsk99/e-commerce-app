@@ -2,21 +2,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UsersEntity } from '@root/users/entities/users.entity';
 import { UsersModule } from '@root/users/users.module';
-import { Connection } from 'typeorm';
+import { Connection, getConnection } from 'typeorm';
 import { CartModule } from '@root/cart/cart.module';
 import { ProductModule } from '@root/product/product.module';
 import { CartItemModule } from '@root/cart-item/cart-item.module';
 import { OrderModule } from '@root/order/order.module';
 import { OrderItemsModule } from '@root/order-item/order-item.module';
 import { PaymentModule } from '@root/payment/payment.module';
-import { CartEntity } from '@root/cart/entities/cart.entity';
-import { CartItemEntity } from '@root/cart-item/entities/cart-item.entity';
-import { OrderEntity } from '@root/order/entities/order.entity';
-import { OrderItemEntity } from '@root/order-item/entities/order-item.entity';
-import { PaymentEntity } from '@root/payment/entities/payment.entity';
-import { ProductEntity } from '@root/product/entities/product.entity';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
@@ -33,20 +26,12 @@ describe('AppController (e2e)', () => {
         PaymentModule,
         TypeOrmModule.forRoot({
           type: 'postgres',
-          host: 'localhost',
-          port: 5432,
-          username: 'postgres',
-          password: 'postgres',
-          database: 'e2e_test',
-          entities: [
-            UsersEntity,
-            CartEntity,
-            CartItemEntity,
-            OrderEntity,
-            OrderItemEntity,
-            PaymentEntity,
-            ProductEntity,
-          ],
+          host: process.env.DB_HOST,
+          port: parseInt(process.env.DB_PORT),
+          username: process.env.DB_USERNAME,
+          password: process.env.DB_PASSWORD,
+          database: process.env.DB_DATABASE_TEST,
+          entities: [__dirname + '/../**/*.entity.ts'],
           logging: true,
           synchronize: true,
         }),
@@ -66,6 +51,11 @@ describe('AppController (e2e)', () => {
 
     const connection = app.get(Connection);
     await connection.synchronize(true);
+  });
+
+  afterAll(async () => {
+    await getConnection().dropDatabase();
+    app.close();
   });
 
   describe('/users', () => {

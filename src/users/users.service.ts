@@ -56,28 +56,40 @@ export class UsersService {
     newUser.username = username;
     newUser.password = password;
     newUser.email = email;
-    const userId = await this.userRepository.save(newUser).then((v) => v.id);
-    return { userId: userId };
+    await this.userRepository.save(newUser);
+    return this.findOne(username);
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async findAll() {
+    const allUsernames = await this.userRepository.find({
+      select: ['id', 'username', 'email', 'createdAt', 'updatedAt'],
+    });
+    return allUsernames;
   }
 
-  async findOne(username: string) {
-    // const thisUser = await this.userRepository.findOne({ username: username });
-    // if (!thisUser) {
-    //   const error = 'Username is not found';
-    //   throw new UserNotFoundException(error);
-    // }
-    return username;
+  async findOne(name: string) {
+    const thisUser = await this.userRepository.findOne({ username: name });
+    if (!thisUser) {
+      const error = 'Username is not found';
+      throw new UserNotFoundException(error);
+    }
+    // const { id, username, email, createdAt, updatedAt } = thisUser;
+    return thisUser;
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(username: string, updateUserDto: UpdateUserDto) {
+    const thisUser = await this.userRepository.findOne({ username: username });
+    if (!thisUser) {
+      const error = 'Username is not found';
+      throw new UserNotFoundException(error);
+    }
+    this.userRepository.update(thisUser.id, { ...updateUserDto });
+    return this.findOne(username);
   }
 
-  async remove(email: string) {
-    return await this.userRepository.delete({ email: email });
+  async remove(username: string) {
+    this.findOne(username);
+    await this.userRepository.delete({ username: username });
+    return 'Successfully deleted';
   }
 }

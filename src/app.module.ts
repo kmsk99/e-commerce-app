@@ -1,19 +1,34 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { UsersModule } from './users/users.module';
-import { CartModule } from './cart/cart.module';
-import { ProductModule } from './product/product.module';
-import { CartItemModule } from './cart-item/cart-item.module';
-import { OrderModule } from './order/order.module';
-import { OrderItemsModule } from './order-item/order-item.module';
-import { PaymentModule } from './payment/payment.module';
-import { AuthModule } from './auth/auth.module';
+import { AppController } from '@root/app.controller';
+import { UsersModule } from '@root/users/users.module';
+import { CartModule } from '@root/cart/cart.module';
+import { ProductModule } from '@root/product/product.module';
+import { CartItemModule } from '@root/cart-item/cart-item.module';
+import { OrderModule } from '@root/order/order.module';
+import { OrderItemsModule } from '@root/order-item/order-item.module';
+import { PaymentModule } from '@root/payment/payment.module';
+import { AuthModule } from '@root/auth/auth.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot(),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: process.env.NODE_ENV === 'dev' ? '.env.dev' : '.env.test',
+      ignoreEnvFile: process.env.NODE_ENV === 'prod',
+    }),
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: process.env.DB_HOST,
+      port: parseInt(process.env.DB_PORT),
+      username: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+      entities: ['dist/**/**.entity{.ts,.js}'],
+      logging: true,
+      synchronize: true,
+    }),
     UsersModule,
     CartModule,
     ProductModule,
@@ -24,6 +39,5 @@ import { AuthModule } from './auth/auth.module';
     AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}

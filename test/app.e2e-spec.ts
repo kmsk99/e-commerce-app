@@ -1,41 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { UsersModule } from '@root/users/users.module';
 import { Connection, getConnection } from 'typeorm';
-import { CartModule } from '@root/cart/cart.module';
-import { ProductModule } from '@root/product/product.module';
-import { CartItemModule } from '@root/cart-item/cart-item.module';
-import { OrderModule } from '@root/order/order.module';
-import { OrderItemsModule } from '@root/order-item/order-item.module';
-import { PaymentModule } from '@root/payment/payment.module';
+import { AppModule } from '@root/app.module';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [
-        UsersModule,
-        CartModule,
-        ProductModule,
-        CartItemModule,
-        OrderModule,
-        OrderItemsModule,
-        PaymentModule,
-        TypeOrmModule.forRoot({
-          type: 'postgres',
-          host: process.env.DB_HOST,
-          port: parseInt(process.env.DB_PORT),
-          username: process.env.DB_USERNAME,
-          password: process.env.DB_PASSWORD,
-          database: process.env.DB_DATABASE_TEST,
-          entities: [__dirname + '/../**/*.entity.ts'],
-          logging: true,
-          synchronize: true,
-        }),
-      ],
+      imports: [AppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();

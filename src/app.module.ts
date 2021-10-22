@@ -25,7 +25,10 @@ import { ConfigModule } from '@nestjs/config';
       username: process.env.DB_USERNAME,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
-      entities: ['dist/**/**.entity{.ts,.js}'],
+      entities:
+        process.env.NODE_ENV === 'test'
+          ? [__dirname + '/../**/*.entity.ts']
+          : ['dist/**/**.entity{.ts,.js}'],
       logging: true,
       synchronize: true,
     }),

@@ -9,7 +9,7 @@ import {
 import * as argon2 from 'argon2';
 
 @Entity('users')
-export class UsersEntity {
+export class UserEntity {
   @PrimaryGeneratedColumn()
   id: number;
 

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from '@root/app.controller';
-import { UsersModule } from '@root/users/users.module';
+import { UserModule } from '@root/user/user.module';
 import { CartModule } from '@root/cart/cart.module';
 import { ProductModule } from '@root/product/product.module';
 import { CartItemModule } from '@root/cart-item/cart-item.module';
@@ -32,7 +32,7 @@ import { ConfigModule } from '@nestjs/config';
       logging: true,
       synchronize: true,
     }),
-    UsersModule,
+    UserModule,
     CartModule,
     ProductModule,
     CartItemModule,

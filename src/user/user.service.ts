@@ -2,14 +2,14 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { validate } from 'class-validator';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UsersEntity } from './entities/users.entity';
-import { UserRepository } from './users.repository';
+import { UserEntity } from './entities/user.entity';
+import { UserRepository } from './user.repository';
 import { UsernameAlreadyExistsException } from './exceptions/username-already-exist-exception';
 import { EmailAlreadyExistsException } from './exceptions/email-already-exist-exception';
 import { UserNotFoundException } from './exceptions/user-not-found-exception';
 
 @Injectable()
-export class UsersService {
+export class UserService {
   constructor(private readonly userRepository: UserRepository) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -27,7 +27,7 @@ export class UsersService {
 
     const { username, email, password } = createUserDto;
 
-    // const getByUserName = getRepository(UsersEntity)
+    // const getByUserName = getRepository(UserEntity)
     //   .createQueryBuilder('user')
     //   .where('user.username = :username', { username });
 
@@ -38,7 +38,7 @@ export class UsersService {
       throw new UsernameAlreadyExistsException(error);
     }
 
-    // const getByEmail = getRepository(UsersEntity)
+    // const getByEmail = getRepository(UserEntity)
     //   .createQueryBuilder('user')
     //   .where('user.email = :email', { email });
 
@@ -52,12 +52,13 @@ export class UsersService {
     }
 
     // create new user
-    const newUser = new UsersEntity();
+    const newUser = new UserEntity();
     newUser.username = username;
     newUser.password = password;
     newUser.email = email;
     await this.userRepository.save(newUser);
-    return this.findOne(username);
+    const result = this.passwordFilter(this.findOne(username));
+    return result;
   }
 
   async findAll() {
@@ -90,5 +91,10 @@ export class UsersService {
     this.findOne(username);
     await this.userRepository.delete({ username: username });
     return 'Successfully deleted';
+  }
+
+  async passwordFilter(result: Promise<UserEntity>) {
+    const { password, ...restResult } = await result;
+    return restResult;
   }
 }

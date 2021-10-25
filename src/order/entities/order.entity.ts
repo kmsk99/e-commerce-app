@@ -8,14 +8,14 @@ import {
   UpdateDateColumn,
   Entity,
 } from 'typeorm';
-import { UsersEntity } from '../../users/entities/users.entity';
+import { UserEntity } from '../../user/entities/user.entity';
 
 @Entity('order')
 export class OrderEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => UsersEntity, (users) => users.id)
+  @ManyToOne(() => UserEntity, (users) => users.id)
   @JoinColumn({ name: 'user_id' })
   userId: number;
 

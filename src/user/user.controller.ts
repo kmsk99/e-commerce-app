@@ -20,10 +20,10 @@ export class UserController {
     return this.UserService.create(createUserDto);
   }
 
-  @Get()
-  findAll() {
-    return this.UserService.findAll();
-  }
+  // @Get()
+  // findAll() {
+  //   return this.UserService.findAll();
+  // }
 
   // @Get('/:username')
   // findOne(@Param('username') username: string) {

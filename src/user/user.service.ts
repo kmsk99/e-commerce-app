@@ -55,6 +55,12 @@ export class UserService {
     }
     return thisUser;
   }
+
+  passwordFilter(result: UserEntity) {
+    const { password, ...restResult } = result;
+    return restResult;
+  }
+
   // async findAll() {
   //   const allUsernames = await this.userRepository.find({
   //     select: ['id', 'username', 'email', 'createdAt', 'updatedAt'],
@@ -76,9 +82,4 @@ export class UserService {
   //   await this.userRepository.delete({ username: username });
   //   return 'Successfully deleted';
   // }
-
-  passwordFilter(result: UserEntity) {
-    const { password, ...restResult } = result;
-    return restResult;
-  }
 }

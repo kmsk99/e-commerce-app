@@ -3,10 +3,9 @@ import { UserRepository } from './user.repository';
 import { UserService } from './user.service';
 import * as faker from 'faker';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UserEntity } from './entities/user.entity';
-import { HttpException } from '@nestjs/common';
 import { UsernameAlreadyExistsException } from './exceptions/username-already-exist-exception';
 import { EmailAlreadyExistsException } from './exceptions/email-already-exist-exception';
+import { UserNotFoundException } from './exceptions/user-not-found-exception';
 
 describe('UserService', () => {
   let userService: UserService;
@@ -14,11 +13,14 @@ describe('UserService', () => {
 
   const userId = faker.datatype.number();
   const randomDate = faker.date.recent();
+  const randomUsername = faker.internet.userName();
+  const randomEmail = faker.internet.email();
+  const randomPassword = faker.internet.password();
 
   const createUserDto: CreateUserDto = {
-    username: faker.internet.userName(),
-    email: faker.internet.email(),
-    password: faker.internet.password(),
+    username: randomUsername,
+    email: randomEmail,
+    password: randomPassword,
   };
 
   const savedUser = {
@@ -58,15 +60,15 @@ describe('UserService', () => {
       const result = await userService.create(createUserDto);
 
       expect(userRepositoryFindOneSpy).toHaveBeenCalledWith({
-        username: createUserDto.username,
+        username: randomUsername,
       });
       expect(userRepositoryFindOneSpy).toHaveBeenCalledWith({
-        email: createUserDto.email,
+        email: randomEmail,
       });
       expect(userRepositoryFindOneSpy).toBeCalledTimes(2);
       expect(userRepositorySaveSpy).toBeCalledTimes(1);
-      expect(result).toHaveProperty('username', createUserDto.username);
-      expect(result).toHaveProperty('email', createUserDto.email);
+      expect(result).toHaveProperty('username', randomUsername);
+      expect(result).toHaveProperty('email', randomEmail);
       expect(result).toHaveProperty('id', userId);
       expect(result).toHaveProperty('createdAt', randomDate);
       expect(result).toHaveProperty('updatedAt', randomDate);
@@ -87,7 +89,7 @@ describe('UserService', () => {
       }
 
       expect(userRepositoryFindOneSpy).toHaveBeenCalledWith({
-        username: createUserDto.username,
+        username: randomUsername,
       });
       expect(userRepositoryFindOneSpy).toBeCalledTimes(1);
     });
@@ -107,17 +109,52 @@ describe('UserService', () => {
       }
 
       expect(userRepositoryFindOneSpy).toHaveBeenCalledWith({
-        username: createUserDto.username,
+        username: randomUsername,
       });
       expect(userRepositoryFindOneSpy).toHaveBeenCalledWith({
-        email: createUserDto.email,
+        email: randomEmail,
       });
       expect(userRepositoryFindOneSpy).toBeCalledTimes(2);
     });
   });
 
   describe('findOne', () => {
-    it.todo('Username is not found');
-    it.todo('Successfully findOne');
+    it('Username is not found', async () => {
+      const userRepositoryFindOneSpy = jest
+        .spyOn(userRepository, 'findOne')
+        .mockResolvedValue(undefined);
+
+      try {
+        await userService.findOne(randomUsername);
+      } catch (err) {
+        expect(err).toBeInstanceOf(UserNotFoundException);
+        expect(err.message).toBe('user not found');
+        expect(err.status).toBe(400);
+      }
+
+      expect(userRepositoryFindOneSpy).toHaveBeenCalledWith({
+        username: randomUsername,
+      });
+      expect(userRepositoryFindOneSpy).toBeCalledTimes(1);
+    });
+    it('Successfully findOne', async () => {
+      const userRepositoryFindOneSpy = jest
+        .spyOn(userRepository, 'findOne')
+        .mockResolvedValue(savedUser);
+
+      const result = await userService.findOne(randomUsername);
+
+      expect(userRepositoryFindOneSpy).toHaveBeenCalledWith({
+        username: randomUsername,
+      });
+      expect(userRepositoryFindOneSpy).toBeCalledTimes(1);
+      expect(result).toBe(savedUser);
+    });
+  });
+
+  it('Password Filter', () => {
+    const result = userService.passwordFilter(savedUser);
+
+    expect(result).not.toHaveProperty('password');
   });
 });

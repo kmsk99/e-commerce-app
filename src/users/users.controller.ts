@@ -11,7 +11,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
-@Controller('users')
+@Controller()
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -25,21 +25,22 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
-  @Get(':username')
-  findOne(@Param('username') username: string) {
-    return this.usersService.findOne(username);
-  }
+  // @Get('/:username')
+  // findOne(@Param('username') username: string) {
+  //   const user = this.usersService.findOne(username);
+  //   return user;
+  // }
 
-  @Patch(':username')
-  update(
-    @Param('username') username: string,
-    @Body() updateUserDto: UpdateUserDto,
-  ) {
-    return this.usersService.update(username, updateUserDto);
-  }
+  // @Patch('/:username')
+  // update(
+  //   @Param('username') username: string,
+  //   @Body() updateUserDto: UpdateUserDto,
+  // ) {
+  //   return this.usersService.update(username, updateUserDto);
+  // }
 
-  @Delete()
-  remove(@Body('username') username: string) {
-    return this.usersService.remove(username);
-  }
+  // @Delete()
+  // remove(@Body('username') username: string) {
+  //   return this.usersService.remove(username);
+  // }
 }

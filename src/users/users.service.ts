@@ -73,7 +73,6 @@ export class UsersService {
       const error = 'Username is not found';
       throw new UserNotFoundException(error);
     }
-    // const { id, username, email, createdAt, updatedAt } = thisUser;
     return thisUser;
   }
 

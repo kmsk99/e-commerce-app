@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 import * as argon2 from 'argon2';
 
-@Entity('users')
+@Entity('user')
 export class UserEntity {
   @PrimaryGeneratedColumn()
   id: number;

@@ -57,7 +57,7 @@ describe('AppController (e2e)', () => {
           .expect({
             statusCode: 400,
             message: 'email already exist',
-            error: 'Email is already exists',
+            error: 'Bad Request',
           });
       });
 
@@ -73,7 +73,7 @@ describe('AppController (e2e)', () => {
           .expect({
             statusCode: 400,
             message: 'username already exist',
-            error: 'UserName is already exists',
+            error: 'Bad Request',
           });
       });
 

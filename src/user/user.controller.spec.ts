@@ -51,7 +51,7 @@ describe('UserController', () => {
   });
 
   describe('/register', () => {
-    it('register succes', async () => {
+    it('POST', async () => {
       const userServiceCreateSpy = jest
         .spyOn(userService, 'create')
         .mockResolvedValue(savedUser);

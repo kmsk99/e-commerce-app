@@ -4,23 +4,45 @@ import { UpdateProductDto } from './dto/update-product.dto';
 
 @Injectable()
 export class ProductService {
-  create(createProductDto: CreateProductDto) {
-    return 'This action adds a new product';
+  async create(createProductDto: CreateProductDto) {
+    const result = new Promise(() => {
+      'This action adds a new product';
+    });
+    return await result;
   }
 
-  findAll() {
-    return `This action returns all product`;
+  async findAll() {
+    const result = new Promise(() => {
+      `This action returns all product`;
+    });
+    return await result;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} product`;
+  async findByCategory(category: string) {
+    const result = new Promise(() => {
+      `This action returns a #${category} product`;
+    });
+    return await result;
   }
 
-  update(id: number, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`;
+  async findOne(id: number) {
+    const result = new Promise(() => {
+      `This action returns a #${id} product`;
+    });
+    return await result;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} product`;
+  async update(id: number, updateProductDto: UpdateProductDto) {
+    const result = new Promise(() => {
+      `This action updates a #${id} product`;
+    });
+    return await result;
+  }
+
+  async remove(id: number) {
+    const result = new Promise(() => {
+      `This action removes a #${id} product`;
+    });
+    return await result;
   }
 }

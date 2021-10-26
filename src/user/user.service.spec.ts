@@ -24,13 +24,23 @@ describe('UserService', () => {
   };
 
   const savedUser = {
+    username: randomUsername,
+    email: randomEmail,
+    password: randomPassword,
     id: userId,
     createdAt: randomDate,
     updatedAt: randomDate,
     hashPassword() {
       return null;
     },
-    ...createUserDto,
+  };
+
+  const fileteredUser = {
+    username: randomUsername,
+    email: randomEmail,
+    id: userId,
+    createdAt: randomDate,
+    updatedAt: randomDate,
   };
 
   beforeEach(async () => {
@@ -67,12 +77,7 @@ describe('UserService', () => {
       });
       expect(userRepositoryFindOneSpy).toBeCalledTimes(2);
       expect(userRepositorySaveSpy).toBeCalledTimes(1);
-      expect(result).toHaveProperty('username', randomUsername);
-      expect(result).toHaveProperty('email', randomEmail);
-      expect(result).toHaveProperty('id', userId);
-      expect(result).toHaveProperty('createdAt', randomDate);
-      expect(result).toHaveProperty('updatedAt', randomDate);
-      expect(result).not.toHaveProperty('password');
+      expect(result).toStrictEqual(fileteredUser);
     });
 
     it('UserName is already exists', async () => {

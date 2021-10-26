@@ -1,7 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { validate } from 'class-validator';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { UserEntity } from './entities/user.entity';
 import { UserRepository } from './user.repository';
 import { UsernameAlreadyExistsException } from './exceptions/username-already-exist-exception';
@@ -57,7 +56,7 @@ export class UserService {
   }
 
   passwordFilter(result: UserEntity) {
-    const { password, ...restResult } = result;
+    const { password, hashPassword, ...restResult } = result;
     return restResult;
   }
 

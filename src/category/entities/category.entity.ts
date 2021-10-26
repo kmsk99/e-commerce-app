@@ -1,32 +1,19 @@
-import { CategoryEntity } from '@root/category/entities/category.entity';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
-  JoinColumn,
-  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity('product')
-export class ProductEntity {
+@Entity('category')
+export class CategoryEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column()
   name: string;
-
-  @Column({ type: 'decimal' })
-  price: number;
-
-  @ManyToOne(() => CategoryEntity, (category) => category.id)
-  @JoinColumn({ name: 'category_id' })
-  categoryId: number;
-
-  @Column()
-  quantity: number;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

@@ -10,6 +10,7 @@ import { OrderItemsModule } from '@root/order-item/order-item.module';
 import { PaymentModule } from '@root/payment/payment.module';
 import { AuthModule } from '@root/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
+import { CategoryModule } from './category/category.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { ConfigModule } from '@nestjs/config';
     OrderItemsModule,
     PaymentModule,
     AuthModule,
+    CategoryModule,
   ],
   controllers: [AppController],
 })

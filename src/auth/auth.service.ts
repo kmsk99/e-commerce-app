@@ -11,8 +11,8 @@ export class AuthService {
   ) {}
 
   async validateUser(username: string, pass: string) {
-    const user = await this.UserService.findOne(username);
     try {
+      const user = await this.UserService.findOne(username);
       if (user && (await argon2.verify(user.password, pass))) {
         const { password, ...result } = user;
         return result;
@@ -20,14 +20,14 @@ export class AuthService {
         return null;
       }
     } catch (err) {
-      throw new UnauthorizedException(err);
+      throw new UnauthorizedException();
     }
   }
 
   async login(user: any) {
     const payload = { username: user.username, sub: user.id };
     return {
-      access_token: this.jwtService.sign(payload),
+      token: this.jwtService.sign(payload),
     };
   }
 }

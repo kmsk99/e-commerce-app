@@ -17,7 +17,7 @@ describe('ProductController', () => {
   const quantity = faker.datatype.number();
   const createdAt = faker.date.recent();
   const updatedAt = faker.date.recent();
-  const deletedAt = undefined;
+  const deletedAt = faker.date.recent();
   const changedRandomProductName = faker.commerce.productName();
   const changedRandomProductPrice = +faker.commerce.price();
   const changedCategoryId = faker.datatype.number();
@@ -46,10 +46,21 @@ describe('ProductController', () => {
     price: randomProductPrice,
     createdAt: createdAt,
     updatedAt: updatedAt,
-    deletedAt: deletedAt,
+    deletedAt: null,
   };
 
   const updatedProduct: ProductEntity = {
+    id: productId,
+    name: changedRandomProductName,
+    categoryId: changedRandomProductPrice,
+    quantity: changedCategoryId,
+    price: changedQuantity,
+    createdAt: createdAt,
+    updatedAt: updeatedupdatedAt,
+    deletedAt: null,
+  };
+
+  const deletedProduct: ProductEntity = {
     id: productId,
     name: changedRandomProductName,
     categoryId: changedRandomProductPrice,
@@ -164,13 +175,13 @@ describe('ProductController', () => {
       it('DELETE', async () => {
         const productServiceRemoveSpy = jest
           .spyOn(productService, 'remove')
-          .mockResolvedValue(`${productId} is removed`);
+          .mockResolvedValue(deletedProduct);
 
         const result = await productController.remove(String(productId));
 
         expect(productServiceRemoveSpy).toHaveBeenCalledWith(productId);
         expect(productServiceRemoveSpy).toBeCalledTimes(1);
-        expect(result).toBe(`${productId} is removed`);
+        expect(result).toBe(deletedProduct);
       });
     });
   });

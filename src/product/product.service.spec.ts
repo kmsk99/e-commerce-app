@@ -142,7 +142,7 @@ describe('ProductService', () => {
 
       const result = await productService.findAll();
 
-      expect(productRepositoryFindSpy).toHaveBeenCalledWith(null);
+      expect(productRepositoryFindSpy).toHaveBeenCalledWith();
       expect(productRepositoryFindSpy).toHaveBeenCalledTimes(1);
       expect(result).toStrictEqual(savedProducts);
     });
@@ -174,7 +174,7 @@ describe('ProductService', () => {
 
       const productRepositoryFindSpy = jest
         .spyOn(productRepository, 'find')
-        .mockResolvedValue(null);
+        .mockResolvedValue([]);
 
       try {
         await productService.findByCategory(categoryName);
@@ -236,7 +236,8 @@ describe('ProductService', () => {
 
       const productRepositoryFindOneSpy = jest
         .spyOn(productRepository, 'findOne')
-        .mockResolvedValue(savedProduct);
+        .mockResolvedValueOnce(savedProduct)
+        .mockResolvedValueOnce(updatedProduct);
 
       const productRepositoryUpdateSpy = jest
         .spyOn(productRepository, 'update')
@@ -254,7 +255,7 @@ describe('ProductService', () => {
       expect(result).toStrictEqual(updatedProduct);
     });
 
-    it.todo('product not found', async () => {
+    it('product not found', async () => {
       const findParam = {
         where: { id: productId },
       };

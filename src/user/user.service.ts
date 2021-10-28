@@ -14,14 +14,7 @@ export class UserService {
   async create(createUserDto: CreateUserDto) {
     const validation_error = await validate(createUserDto);
     if (validation_error.length > 0) {
-      const error = { username: 'UserInput is not valid check type' };
-      throw new HttpException(
-        {
-          message: 'Input data validation failed',
-          error,
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new HttpException(validation_error, HttpStatus.BAD_REQUEST);
     }
 
     const { username, email, password } = createUserDto;

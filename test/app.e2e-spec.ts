@@ -3,6 +3,8 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { Connection, getConnection } from 'typeorm';
 import { AppModule } from '@root/app.module';
+import * as faker from 'faker';
+import { isJWT, IS_JWT } from 'class-validator';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
@@ -32,27 +34,63 @@ describe('AppController (e2e)', () => {
     app.close();
   });
 
-  describe('/register', () => {
-    describe('POST', () => {
+  describe('user', () => {
+    let userAToken: string;
+
+    const userA = {
+      username: faker.internet.userName(),
+      email: faker.internet.email(),
+      password: faker.internet.password(),
+    };
+
+    const userB = {
+      username: faker.internet.userName(),
+      email: faker.internet.email(),
+      password: faker.internet.password(),
+    };
+
+    const userLongName = {
+      username: '1'.repeat(33),
+      email: faker.internet.email(),
+      password: faker.internet.password(),
+    };
+
+    const userShortName = {
+      username: '1'.repeat(3),
+      email: faker.internet.email(),
+      password: faker.internet.password(),
+    };
+
+    const userNotEmail = {
+      username: faker.internet.userName(),
+      email: 'not email',
+      password: faker.internet.password(),
+    };
+
+    const userASameUsername = {
+      username: userA.username,
+      email: faker.internet.email(),
+      password: faker.internet.password(),
+    };
+
+    const userASameEmail = {
+      username: faker.internet.userName(),
+      email: userA.email,
+      password: faker.internet.password(),
+    };
+
+    describe('/register POST', () => {
       it('register succes', () => {
         return request(app.getHttpServer())
           .post('/register')
-          .send({
-            username: 'username1',
-            email: 'abc@naver.com',
-            password: '12345678',
-          })
+          .send(userA)
           .expect(201);
       });
 
       it('email_already_exists_exception', () => {
         return request(app.getHttpServer())
           .post('/register')
-          .send({
-            username: 'username2',
-            email: 'abc@naver.com',
-            password: '12345678',
-          })
+          .send(userASameEmail)
           .expect(400)
           .expect({
             statusCode: 400,
@@ -64,11 +102,7 @@ describe('AppController (e2e)', () => {
       it('username_already_exists_exception', () => {
         return request(app.getHttpServer())
           .post('/register')
-          .send({
-            username: 'username1',
-            email: 'abcd@naver.com',
-            password: '12345678',
-          })
+          .send(userASameUsername)
           .expect(400)
           .expect({
             statusCode: 400,
@@ -80,11 +114,7 @@ describe('AppController (e2e)', () => {
       it('username too short', () => {
         return request(app.getHttpServer())
           .post('/register')
-          .send({
-            username: 'abc',
-            email: 'abcd@naver.com',
-            password: '12345678',
-          })
+          .send(userShortName)
           .expect(400)
           .expect({
             statusCode: 400,
@@ -96,11 +126,7 @@ describe('AppController (e2e)', () => {
       it('username too long', () => {
         return request(app.getHttpServer())
           .post('/register')
-          .send({
-            username: '123456789012345678901234567890123',
-            email: 'abcd@naver.com',
-            password: '12345678',
-          })
+          .send(userLongName)
           .expect(400)
           .expect({
             statusCode: 400,
@@ -114,11 +140,7 @@ describe('AppController (e2e)', () => {
       it('email is not valid', () => {
         return request(app.getHttpServer())
           .post('/register')
-          .send({
-            username: 'abcd',
-            email: 'abcd@com',
-            password: '12345678',
-          })
+          .send(userNotEmail)
           .expect(400)
           .expect({
             statusCode: 400,
@@ -127,10 +149,64 @@ describe('AppController (e2e)', () => {
           });
       });
     });
-  });
 
-  describe('/login', () => {
-    it.todo('POST');
+    describe('/login POST', () => {
+      it('login success', () => {
+        return request(app.getHttpServer())
+          .post('/login')
+          .send({ username: userA.username, password: userA.password })
+          .expect(201)
+          .expect((response: request.Response) => {
+            const { token }: { token: string } = response.body;
+            userAToken = token;
+            expect(isJWT(token)).toBeTruthy();
+          });
+      });
+
+      it('not exist username', () => {
+        return request(app.getHttpServer())
+          .post('/login')
+          .send({ username: userB.username, password: userB.password })
+          .expect(401)
+          .expect((response: request.Response) => {
+            const { token }: { token: string } = response.body;
+            expect(token).toBeUndefined();
+          });
+      });
+
+      it('not matching password', () => {
+        return request(app.getHttpServer())
+          .post('/login')
+          .send({ username: userA.username, password: userB.password })
+          .expect(401)
+          .expect((response: request.Response) => {
+            const { token }: { token: string } = response.body;
+            expect(token).toBeUndefined();
+          });
+      });
+    });
+
+    describe('/profile GET', () => {
+      it('profile success', () => {
+        return request(app.getHttpServer())
+          .get('/profile')
+          .set('Authorization', `Bearer ${userAToken}`)
+          .expect((response: request.Response) => {
+            expect(response.body.username).toBe(userA.username);
+          })
+          .expect(200);
+      });
+
+      it('Unauthorized', () => {
+        return request(app.getHttpServer())
+          .get('/profile')
+          .set('Authorization', `Bearer ${'randomjwt'}`)
+          .expect({
+            statusCode: 401,
+            message: 'Unauthorized',
+          });
+      });
+    });
   });
 
   describe('/products', () => {

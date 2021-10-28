@@ -127,15 +127,15 @@ describe('ProductController', () => {
 
     describe('?category=query', () => {
       it('GET', async () => {
-        const query = faker.commerce.productAdjective();
-
         const productServiceFindByCategorySpy = jest
           .spyOn(productService, 'findByCategory')
           .mockResolvedValue(savedProducts);
 
-        const result = await productController.findByCategory(query);
+        const result = await productController.findByCategory(categoryId);
 
-        expect(productServiceFindByCategorySpy).toHaveBeenCalledWith(query);
+        expect(productServiceFindByCategorySpy).toHaveBeenCalledWith(
+          categoryId,
+        );
         expect(productServiceFindByCategorySpy).toBeCalledTimes(1);
         expect(result).toBe(savedProducts);
       });

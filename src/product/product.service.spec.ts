@@ -151,15 +151,14 @@ describe('ProductService', () => {
   describe('findByCategory', () => {
     it('success', async () => {
       const findParam = {
-        where: { category: { name: categoryName } },
-        relations: ['category'],
+        where: { category_id: categoryId },
       };
 
       const productRepositoryFindSpy = jest
         .spyOn(productRepository, 'find')
         .mockResolvedValue(savedProducts);
 
-      const result = await productService.findByCategory(categoryName);
+      const result = await productService.findByCategory(categoryId);
 
       expect(productRepositoryFindSpy).toHaveBeenCalledWith(findParam);
       expect(productRepositoryFindSpy).toHaveBeenCalledTimes(1);
@@ -168,8 +167,7 @@ describe('ProductService', () => {
 
     it('category not found', async () => {
       const findParam = {
-        where: { category: { name: categoryName } },
-        relations: ['category'],
+        where: { category_id: categoryId },
       };
 
       const productRepositoryFindSpy = jest
@@ -177,7 +175,7 @@ describe('ProductService', () => {
         .mockResolvedValue([]);
 
       try {
-        await productService.findByCategory(categoryName);
+        await productService.findByCategory(categoryId);
       } catch (err) {
         expect(err).toBeInstanceOf(CategoryNotFoundError);
         expect(err.message).toBe('category not found');

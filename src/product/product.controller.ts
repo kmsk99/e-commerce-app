@@ -27,8 +27,8 @@ export class ProductController {
   }
 
   @Get()
-  findByCategory(@Query('category') seachingCategory: string) {
-    return this.productService.findByCategory(seachingCategory);
+  findByCategory(@Query('categoryId') seachingCategoryId: number) {
+    return this.productService.findByCategory(seachingCategoryId);
   }
 
   @Get(':id')

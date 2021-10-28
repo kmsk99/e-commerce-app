@@ -5,12 +5,16 @@ import * as faker from 'faker';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductEntity } from './entities/product.entity';
-import { UserRepository } from '@root/user/user.repository';
+import { CategoryNotFoundError } from './exceptions/category-not-found-exception';
+import { ProductNotFoundError } from './exceptions/product-not-found-exception';
+import { UpdateResult } from 'typeorm';
+import { ProductNotUpdatedError } from './exceptions/product-not-updated-exception';
 
 describe('ProductService', () => {
   let productService: ProductService;
   let productRepository: ProductRepository;
 
+  const categoryName = faker.commerce.productAdjective();
   const productId = faker.datatype.number();
   const randomProductName = faker.commerce.productName();
   const randomProductPrice = +faker.commerce.price();
@@ -18,12 +22,12 @@ describe('ProductService', () => {
   const quantity = faker.datatype.number();
   const createdAt = faker.date.recent();
   const updatedAt = faker.date.recent();
-  const deletedAt = undefined;
+  const deletedAt = faker.date.recent();
   const changedRandomProductName = faker.commerce.productName();
   const changedRandomProductPrice = +faker.commerce.price();
   const changedCategoryId = faker.datatype.number();
   const changedQuantity = faker.datatype.number();
-  const updeatedupdatedAt = faker.date.recent();
+  const updatedUpdatedAt = faker.date.recent();
 
   const createProductDto: CreateProductDto = {
     name: randomProductName,
@@ -47,7 +51,7 @@ describe('ProductService', () => {
     price: randomProductPrice,
     createdAt: createdAt,
     updatedAt: updatedAt,
-    deletedAt: deletedAt,
+    deletedAt: null,
   };
 
   const updatedProduct: ProductEntity = {
@@ -57,15 +61,54 @@ describe('ProductService', () => {
     quantity: changedCategoryId,
     price: changedQuantity,
     createdAt: createdAt,
-    updatedAt: updeatedupdatedAt,
+    updatedAt: updatedUpdatedAt,
+    deletedAt: null,
+  };
+
+  const deletedProduct: ProductEntity = {
+    id: productId,
+    name: randomProductName,
+    categoryId: categoryId,
+    quantity: quantity,
+    price: randomProductPrice,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
     deletedAt: deletedAt,
+  };
+
+  const updateResultSuccess: UpdateResult = {
+    generatedMaps: [
+      {
+        id: productId,
+        createdAt: createdAt,
+        updatedAt: updatedUpdatedAt,
+      },
+    ],
+    raw: [
+      {
+        id: productId,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      },
+    ],
+  };
+
+  const updateResultFailure: UpdateResult = {
+    generatedMaps: [],
+    raw: [
+      {
+        id: productId,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      },
+    ],
   };
 
   const savedProducts = [savedProduct];
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ProductService, UserRepository],
+      providers: [ProductService, ProductRepository],
     }).compile();
 
     productService = module.get<ProductService>(ProductService);
@@ -75,5 +118,236 @@ describe('ProductService', () => {
   it('should be defined', () => {
     expect(productService).toBeDefined();
     expect(productRepository).toBeDefined();
+  });
+
+  describe('create', () => {
+    it('success', async () => {
+      const productRepositorySaveSpy = jest
+        .spyOn(productRepository, 'save')
+        .mockResolvedValue(savedProduct);
+
+      const result = await productService.create(createProductDto);
+
+      expect(productRepositorySaveSpy).toHaveBeenCalledWith(createProductDto);
+      expect(productRepositorySaveSpy).toHaveBeenCalledTimes(1);
+      expect(result).toStrictEqual(savedProduct);
+    });
+  });
+
+  describe('findAll', () => {
+    it('success', async () => {
+      const productRepositoryFindSpy = jest
+        .spyOn(productRepository, 'find')
+        .mockResolvedValue(savedProducts);
+
+      const result = await productService.findAll();
+
+      expect(productRepositoryFindSpy).toHaveBeenCalledWith(null);
+      expect(productRepositoryFindSpy).toHaveBeenCalledTimes(1);
+      expect(result).toStrictEqual(savedProducts);
+    });
+  });
+
+  describe('findByCategory', () => {
+    it('success', async () => {
+      const findParam = {
+        where: { category: { name: categoryName } },
+        relations: ['category'],
+      };
+
+      const productRepositoryFindSpy = jest
+        .spyOn(productRepository, 'find')
+        .mockResolvedValue(savedProducts);
+
+      const result = await productService.findByCategory(categoryName);
+
+      expect(productRepositoryFindSpy).toHaveBeenCalledWith(findParam);
+      expect(productRepositoryFindSpy).toHaveBeenCalledTimes(1);
+      expect(result).toStrictEqual(savedProducts);
+    });
+
+    it('category not found', async () => {
+      const findParam = {
+        where: { category: { name: categoryName } },
+        relations: ['category'],
+      };
+
+      const productRepositoryFindSpy = jest
+        .spyOn(productRepository, 'find')
+        .mockResolvedValue(null);
+
+      try {
+        await productService.findByCategory(categoryName);
+      } catch (err) {
+        expect(err).toBeInstanceOf(CategoryNotFoundError);
+        expect(err.message).toBe('category not found');
+        expect(err.status).toBe(400);
+      }
+
+      expect(productRepositoryFindSpy).toHaveBeenCalledWith(findParam);
+      expect(productRepositoryFindSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('findOne', () => {
+    it('success', async () => {
+      const findParam = {
+        where: { id: productId },
+      };
+
+      const productRepositoryFindOneSpy = jest
+        .spyOn(productRepository, 'findOne')
+        .mockResolvedValue(savedProduct);
+
+      const result = await productService.findOne(productId);
+
+      expect(productRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
+      expect(productRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
+      expect(result).toStrictEqual(savedProduct);
+    });
+
+    it('product not found', async () => {
+      const findParam = {
+        where: { id: productId },
+      };
+
+      const productRepositoryFindOneSpy = jest
+        .spyOn(productRepository, 'findOne')
+        .mockResolvedValue(null);
+
+      try {
+        await productService.findOne(productId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ProductNotFoundError);
+        expect(err.message).toBe('product not found');
+        expect(err.status).toBe(400);
+      }
+
+      expect(productRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
+      expect(productRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('update', () => {
+    it('success', async () => {
+      const findParam = {
+        where: { id: productId },
+      };
+
+      const productRepositoryFindOneSpy = jest
+        .spyOn(productRepository, 'findOne')
+        .mockResolvedValue(savedProduct);
+
+      const productRepositoryUpdateSpy = jest
+        .spyOn(productRepository, 'update')
+        .mockResolvedValue(updateResultSuccess);
+
+      const result = await productService.update(productId, updateProductDto);
+
+      expect(productRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
+      expect(productRepositoryFindOneSpy).toHaveBeenCalledTimes(2);
+      expect(productRepositoryUpdateSpy).toHaveBeenCalledWith(
+        productId,
+        updateProductDto,
+      );
+      expect(productRepositoryUpdateSpy).toHaveBeenCalledTimes(1);
+      expect(result).toStrictEqual(updatedProduct);
+    });
+
+    it.todo('product not found', async () => {
+      const findParam = {
+        where: { id: productId },
+      };
+
+      const productRepositoryFindOneSpy = jest
+        .spyOn(productRepository, 'findOne')
+        .mockResolvedValue(null);
+
+      try {
+        await productService.update(productId, updateProductDto);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ProductNotFoundError);
+        expect(err.message).toBe('product not found');
+        expect(err.status).toBe(400);
+      }
+
+      expect(productRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
+      expect(productRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('product not updated', async () => {
+      const findParam = {
+        where: { id: productId },
+      };
+
+      const productRepositoryFindOneSpy = jest
+        .spyOn(productRepository, 'findOne')
+        .mockResolvedValue(savedProduct);
+
+      const productRepositoryUpdateSpy = jest
+        .spyOn(productRepository, 'update')
+        .mockResolvedValue(updateResultFailure);
+
+      try {
+        await productService.update(productId, updateProductDto);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ProductNotUpdatedError);
+        expect(err.message).toBe('product not updated');
+        expect(err.status).toBe(400);
+      }
+
+      expect(productRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
+      expect(productRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
+      expect(productRepositoryUpdateSpy).toHaveBeenCalledWith(
+        productId,
+        updateProductDto,
+      );
+      expect(productRepositoryUpdateSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('remove', () => {
+    it('success', async () => {
+      const findParam = {
+        where: { id: productId },
+      };
+
+      const productRepositoryFindOneSpy = jest
+        .spyOn(productRepository, 'findOne')
+        .mockResolvedValue(savedProduct);
+
+      const productRepositorySoftDeleteSpy = jest
+        .spyOn(productRepository, 'softRemove')
+        .mockResolvedValue(deletedProduct);
+
+      const result = await productService.remove(productId);
+
+      expect(productRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
+      expect(productRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
+      expect(productRepositorySoftDeleteSpy).toHaveBeenCalledWith(savedProduct);
+      expect(productRepositorySoftDeleteSpy).toHaveBeenCalledTimes(1);
+      expect(result).toStrictEqual(deletedProduct);
+    });
+
+    it('product not found', async () => {
+      const findParam = {
+        where: { id: productId },
+      };
+
+      const productRepositoryFindOneSpy = jest
+        .spyOn(productRepository, 'findOne')
+        .mockResolvedValue(null);
+
+      try {
+        await productService.remove(productId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ProductNotFoundError);
+        expect(err.message).toBe('product not found');
+        expect(err.status).toBe(400);
+      }
+
+      expect(productRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
+      expect(productRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
+    });
   });
 });

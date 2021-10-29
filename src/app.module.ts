@@ -9,8 +9,8 @@ import { OrderModule } from '@root/order/order.module';
 import { OrderItemsModule } from '@root/order-item/order-item.module';
 import { PaymentModule } from '@root/payment/payment.module';
 import { AuthModule } from '@root/auth/auth.module';
+import { CategoryModule } from '@root/category/category.module';
 import { ConfigModule } from '@nestjs/config';
-import { CategoryModule } from './category/category.module';
 
 @Module({
   imports: [

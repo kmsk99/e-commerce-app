@@ -5,13 +5,16 @@ import * as faker from 'faker';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductEntity } from './entities/product.entity';
-import { CategoryNotFoundError } from './exceptions/category-not-found-exception';
 import { ProductNotFoundError } from './exceptions/product-not-found-exception';
 import { UpdateResult } from 'typeorm';
+import { CategoryEntity } from '@root/category/entities/category.entity';
+import { CategoryService } from '@root/category/category.service';
+import { CategoryNotFoundError } from '@root/category/exceptions/category-not-found-exception';
 
 describe('ProductService', () => {
   let productService: ProductService;
   let productRepository: ProductRepository;
+  let categoryService: CategoryService;
 
   const productId = faker.datatype.number();
   const randomProductName = faker.commerce.productName();
@@ -91,6 +94,14 @@ describe('ProductService', () => {
     ],
   };
 
+  const foundCategoryId: CategoryEntity = {
+    id: categoryId,
+    name: faker.commerce.productAdjective(),
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+    deletedAt: null,
+  };
+
   const savedProducts = [savedProduct];
 
   beforeEach(async () => {
@@ -100,21 +111,31 @@ describe('ProductService', () => {
 
     productService = module.get<ProductService>(ProductService);
     productRepository = module.get<ProductRepository>(ProductRepository);
+    categoryService = module.get<CategoryService>(CategoryService);
   });
 
   it('should be defined', () => {
     expect(productService).toBeDefined();
     expect(productRepository).toBeDefined();
+    expect(categoryService).toBeDefined();
   });
 
   describe('create', () => {
     it('success', async () => {
+      const categoryServiceFindOneSpy = jest
+        .spyOn(categoryService, 'findOne')
+        .mockResolvedValue(foundCategoryId);
+
       const productRepositorySaveSpy = jest
         .spyOn(productRepository, 'save')
         .mockResolvedValue(savedProduct);
 
       const result = await productService.create(createProductDto);
 
+      expect(categoryServiceFindOneSpy).toHaveBeenCalledWith(
+        createProductDto.categoryId,
+      );
+      expect(categoryServiceFindOneSpy).toHaveBeenCalledTimes(1);
       expect(productRepositorySaveSpy).toHaveBeenCalledWith(createProductDto);
       expect(productRepositorySaveSpy).toHaveBeenCalledTimes(1);
       expect(result).toStrictEqual(savedProduct);

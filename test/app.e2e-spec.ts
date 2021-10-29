@@ -344,8 +344,8 @@ describe('AppController (e2e)', () => {
 
       describe('DELETE', () => {
         it('success', async () => {
-          await request(app.getHttpServer()).delete('/category/1');
-          return await request(app.getHttpServer()).get('/category/1').expect({
+          await request(app.getHttpServer()).delete('/category/3');
+          return await request(app.getHttpServer()).get('/category/3').expect({
             statusCode: 400,
             message: 'category not found',
             error: 'Bad Request',
@@ -353,7 +353,7 @@ describe('AppController (e2e)', () => {
         });
 
         it('category not found', () => {
-          return request(app.getHttpServer()).delete('/category/1').expect({
+          return request(app.getHttpServer()).delete('/category/3').expect({
             statusCode: 400,
             message: 'category not found',
             error: 'Bad Request',
@@ -364,7 +364,63 @@ describe('AppController (e2e)', () => {
   });
 
   describe('/products', () => {
-    it.todo('POST');
+    const productA = {
+      name: faker.commerce.product(),
+      categoryId: 1,
+      price: faker.commerce.price(),
+      quantity: faker.datatype.number(),
+    };
+
+    const productB = {
+      name: faker.commerce.product(),
+      categoryId: 2,
+      price: faker.commerce.price(),
+      quantity: faker.datatype.number(),
+    };
+
+    const productC = {
+      name: faker.commerce.product(),
+      categoryId: 2,
+      price: faker.commerce.price(),
+      quantity: faker.datatype.number(),
+    };
+
+    const productNotExistCategoryId = {
+      name: faker.commerce.product(),
+      categoryId: 3,
+      price: faker.commerce.price(),
+      quantity: faker.datatype.number(),
+    };
+
+    describe('POST', () => {
+      it('success productA', () => {
+        return request(app.getHttpServer())
+          .post('/products')
+          .send(productA)
+          .expect(201);
+      });
+
+      it.todo('success productB', () => {
+        return request(app.getHttpServer())
+          .post('/products')
+          .send(productB)
+          .expect(201);
+      });
+
+      it.todo('success productC', () => {
+        return request(app.getHttpServer())
+          .post('/products')
+          .send(productC)
+          .expect(201);
+      });
+
+      it.todo('not exist category', () => {
+        return request(app.getHttpServer())
+          .post('/products')
+          .send(productNotExistCategoryId)
+          .expect(201);
+      });
+    });
     it.todo('GET');
     describe('/:id', () => {
       it.todo('GET');

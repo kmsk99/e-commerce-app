@@ -1,15 +1,19 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { CategoryService } from '@root/category/category.service';
 import { validate } from 'class-validator';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductEntity } from './entities/product.entity';
-import { CategoryNotFoundError } from './exceptions/category-not-found-exception';
 import { ProductNotFoundError } from './exceptions/product-not-found-exception';
 import { ProductRepository } from './product.repository';
 
+// 순환종속성 문서 봐야함
 @Injectable()
 export class ProductService {
-  constructor(private readonly productRepository: ProductRepository) {}
+  constructor(
+    private readonly productRepository: ProductRepository,
+    private readonly categoryService: CategoryService,
+  ) {}
 
   async create(createProductDto: CreateProductDto) {
     const validation_error = await validate(createProductDto);
@@ -18,6 +22,8 @@ export class ProductService {
     }
 
     const { name, categoryId, price, quantity } = createProductDto;
+
+    await this.categoryService.findOne(categoryId);
 
     const newProduct = new ProductEntity();
     newProduct.name = name;
@@ -36,13 +42,11 @@ export class ProductService {
   }
 
   async findByCategory(categoryId: number) {
+    await this.categoryService.findOne(categoryId);
+
     const result = await this.productRepository.find({
       where: { category_id: categoryId },
     });
-
-    if (result.length === 0) {
-      throw new CategoryNotFoundError();
-    }
 
     return result;
   }
@@ -59,6 +63,8 @@ export class ProductService {
 
   async update(id: number, updateProductDto: UpdateProductDto) {
     await this.findOne(id);
+
+    await this.categoryService.findOne(updateProductDto.categoryId);
 
     await this.productRepository.update(id, updateProductDto);
 

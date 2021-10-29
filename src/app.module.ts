@@ -28,9 +28,10 @@ import { CategoryModule } from './category/category.module';
       database: process.env.DB_NAME,
       entities:
         process.env.NODE_ENV === 'test'
-          ? [__dirname + '/../**/*.entity.ts']
-          : ['dist/**/**.entity{.ts,.js}'],
+          ? [__dirname + '/../**/*.entity.{js,ts}']
+          : [__dirname + '/**/*.entity.{js,ts}'],
       logging: true,
+      autoLoadEntities: true,
       synchronize: true,
     }),
     UserModule,

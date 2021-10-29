@@ -5,7 +5,6 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductEntity } from './entities/product.entity';
 import { CategoryNotFoundError } from './exceptions/category-not-found-exception';
 import { ProductNotFoundError } from './exceptions/product-not-found-exception';
-import { ProductNotUpdatedError } from './exceptions/product-not-updated-exception';
 import { ProductRepository } from './product.repository';
 
 @Injectable()
@@ -61,14 +60,7 @@ export class ProductService {
   async update(id: number, updateProductDto: UpdateProductDto) {
     await this.findOne(id);
 
-    const updatedProduct = await this.productRepository.update(
-      id,
-      updateProductDto,
-    );
-
-    if (updatedProduct.generatedMaps.length === 0) {
-      throw new ProductNotUpdatedError();
-    }
+    await this.productRepository.update(id, updateProductDto);
 
     const result = await this.findOne(id);
 

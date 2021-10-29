@@ -5,6 +5,7 @@ import * as faker from 'faker';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CategoryEntity } from './entities/category.entity';
+import { CategoryNameAlreadyExistsException } from './exceptions/category-name-already-exist-exception';
 
 describe('CategoryController', () => {
   let categoryController: CategoryController;
@@ -79,16 +80,39 @@ describe('CategoryController', () => {
   });
 
   describe('/category', () => {
-    it('POST', async () => {
-      const categoryServiceCreateSpy = jest
-        .spyOn(categoryService, 'create')
-        .mockResolvedValue(savedCategory);
+    describe('POST', () => {
+      it('success', async () => {
+        const categoryServiceCreateSpy = jest
+          .spyOn(categoryService, 'create')
+          .mockResolvedValue(savedCategory);
 
-      const result = await categoryController.create(createCategoryDto);
+        const result = await categoryController.create(createCategoryDto);
 
-      expect(categoryServiceCreateSpy).toHaveBeenCalledWith(createCategoryDto);
-      expect(categoryServiceCreateSpy).toBeCalledTimes(1);
-      expect(result).toBe(savedCategory);
+        expect(categoryServiceCreateSpy).toHaveBeenCalledWith(
+          createCategoryDto,
+        );
+        expect(categoryServiceCreateSpy).toBeCalledTimes(1);
+        expect(result).toBe(savedCategory);
+      });
+
+      it('category name already exist', async () => {
+        const categoryServiceCreateSpy = jest
+          .spyOn(categoryService, 'create')
+          .mockRejectedValue(new CategoryNameAlreadyExistsException());
+
+        try {
+          await categoryController.create(createCategoryDto);
+        } catch (err) {
+          expect(err).toBeInstanceOf(CategoryNameAlreadyExistsException);
+          expect(err.message).toBe('category name already exist');
+          expect(err.status).toBe(400);
+        }
+
+        expect(categoryServiceCreateSpy).toHaveBeenCalledWith(
+          createCategoryDto,
+        );
+        expect(categoryServiceCreateSpy).toBeCalledTimes(1);
+      });
     });
 
     it('GET', async () => {

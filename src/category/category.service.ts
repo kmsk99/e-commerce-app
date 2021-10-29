@@ -1,11 +1,11 @@
-import { HttpException, Injectable, HttpStatus } from '@nestjs/common';
+import { HttpException, Injectable, HttpStatus, Logger } from '@nestjs/common';
 import { CategoryRepository } from './category.repository';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { validate } from 'class-validator';
 import { CategoryEntity } from './entities/category.entity';
 import { CategoryNotFoundError } from './exceptions/category-not-found-exception';
-import { CategoryNotUpdatedError } from './exceptions/category-not-updated-exception';
+import { CategoryNameAlreadyExistsException } from './exceptions/category-name-already-exist-exception';
 
 @Injectable()
 export class CategoryService {
@@ -18,6 +18,14 @@ export class CategoryService {
     }
 
     const { name } = createCategoryDto;
+
+    const thisCategory = await this.categoryRepository.findOne({
+      where: { name: name },
+    });
+
+    if (thisCategory) {
+      throw new CategoryNameAlreadyExistsException();
+    }
 
     const newCategory = new CategoryEntity();
     newCategory.name = name;
@@ -45,14 +53,22 @@ export class CategoryService {
   async update(id: number, updateCategoryDto: UpdateCategoryDto) {
     await this.findOne(id);
 
-    const updatedCategory = await this.categoryRepository.update(
-      id,
-      updateCategoryDto,
-    );
-
-    if (updatedCategory.generatedMaps.length === 0) {
-      throw new CategoryNotUpdatedError();
+    const validation_error = await validate(updateCategoryDto);
+    if (validation_error.length > 0) {
+      throw new HttpException(validation_error, HttpStatus.BAD_REQUEST);
     }
+
+    const { name } = updateCategoryDto;
+
+    const thisCategory = await this.categoryRepository.findOne({
+      where: { name: name },
+    });
+
+    if (thisCategory) {
+      throw new CategoryNameAlreadyExistsException();
+    }
+
+    await this.categoryRepository.update(id, updateCategoryDto);
 
     const result = await this.findOne(id);
 

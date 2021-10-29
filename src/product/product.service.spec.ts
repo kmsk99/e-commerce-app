@@ -8,7 +8,6 @@ import { ProductEntity } from './entities/product.entity';
 import { CategoryNotFoundError } from './exceptions/category-not-found-exception';
 import { ProductNotFoundError } from './exceptions/product-not-found-exception';
 import { UpdateResult } from 'typeorm';
-import { ProductNotUpdatedError } from './exceptions/product-not-updated-exception';
 
 describe('ProductService', () => {
   let productService: ProductService;
@@ -83,17 +82,6 @@ describe('ProductService', () => {
         updatedAt: updatedUpdatedAt,
       },
     ],
-    raw: [
-      {
-        id: productId,
-        createdAt: createdAt,
-        updatedAt: updatedAt,
-      },
-    ],
-  };
-
-  const updateResultFailure: UpdateResult = {
-    generatedMaps: [],
     raw: [
       {
         id: productId,
@@ -271,36 +259,6 @@ describe('ProductService', () => {
 
       expect(productRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
       expect(productRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
-    });
-
-    it('product not updated', async () => {
-      const findParam = {
-        where: { id: productId },
-      };
-
-      const productRepositoryFindOneSpy = jest
-        .spyOn(productRepository, 'findOne')
-        .mockResolvedValue(savedProduct);
-
-      const productRepositoryUpdateSpy = jest
-        .spyOn(productRepository, 'update')
-        .mockResolvedValue(updateResultFailure);
-
-      try {
-        await productService.update(productId, updateProductDto);
-      } catch (err) {
-        expect(err).toBeInstanceOf(ProductNotUpdatedError);
-        expect(err.message).toBe('product not updated');
-        expect(err.status).toBe(400);
-      }
-
-      expect(productRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
-      expect(productRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
-      expect(productRepositoryUpdateSpy).toHaveBeenCalledWith(
-        productId,
-        updateProductDto,
-      );
-      expect(productRepositoryUpdateSpy).toHaveBeenCalledTimes(1);
     });
   });
 

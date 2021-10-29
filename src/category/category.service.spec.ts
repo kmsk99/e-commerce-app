@@ -7,7 +7,7 @@ import { CategoryEntity } from './entities/category.entity';
 import { CategoryRepository } from './category.repository';
 import { UpdateResult } from 'typeorm';
 import { CategoryNotFoundError } from './exceptions/category-not-found-exception';
-import { CategoryNotUpdatedError } from './exceptions/category-not-updated-exception';
+import { CategoryNameAlreadyExistsException } from './exceptions/category-name-already-exist-exception';
 
 describe('CategoryService', () => {
   let categoryService: CategoryService;
@@ -70,17 +70,6 @@ describe('CategoryService', () => {
     ],
   };
 
-  const updateResultFailure: UpdateResult = {
-    generatedMaps: [],
-    raw: [
-      {
-        id: categoryId,
-        createdAt: createdAt,
-        updatedAt: updatedAt,
-      },
-    ],
-  };
-
   const savedCategories = [savedCategory];
 
   beforeEach(async () => {
@@ -99,15 +88,46 @@ describe('CategoryService', () => {
 
   describe('create', () => {
     it('success', async () => {
+      const findParam = {
+        where: { name: randomCategoryName },
+      };
+
+      const categoryRepositoryFindOneSpy = jest
+        .spyOn(categoryRepository, 'findOne')
+        .mockResolvedValue(undefined);
+
       const categoryRepositorySaveSpy = jest
         .spyOn(categoryRepository, 'save')
         .mockResolvedValue(savedCategory);
 
       const result = await categoryService.create(createCategoryDto);
 
+      expect(categoryRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
+      expect(categoryRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
       expect(categoryRepositorySaveSpy).toHaveBeenCalledWith(createCategoryDto);
       expect(categoryRepositorySaveSpy).toHaveBeenCalledTimes(1);
       expect(result).toStrictEqual(savedCategory);
+    });
+
+    it('category name already exist', async () => {
+      const findParam = {
+        where: { name: randomCategoryName },
+      };
+
+      const categoryRepositoryFindOneSpy = jest
+        .spyOn(categoryRepository, 'findOne')
+        .mockResolvedValue(savedCategory);
+
+      try {
+        await categoryService.create(createCategoryDto);
+      } catch (err) {
+        expect(err).toBeInstanceOf(CategoryNameAlreadyExistsException);
+        expect(err.message).toBe('category name already exist');
+        expect(err.status).toBe(400);
+      }
+
+      expect(categoryRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
+      expect(categoryRepositoryFindOneSpy).toBeCalledTimes(1);
     });
   });
 
@@ -166,13 +186,18 @@ describe('CategoryService', () => {
 
   describe('update', () => {
     it('success', async () => {
-      const findParam = {
+      const findParam1 = {
         where: { id: categoryId },
+      };
+
+      const findParam2 = {
+        where: { name: updatedCategoryName },
       };
 
       const categoryRepositoryFindOneSpy = jest
         .spyOn(categoryRepository, 'findOne')
         .mockResolvedValueOnce(savedCategory)
+        .mockResolvedValueOnce(undefined)
         .mockResolvedValueOnce(updatedCategory);
 
       const categoryRepositoryUpdateSpy = jest
@@ -184,8 +209,19 @@ describe('CategoryService', () => {
         updateCategoryDto,
       );
 
-      expect(categoryRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
-      expect(categoryRepositoryFindOneSpy).toHaveBeenCalledTimes(2);
+      expect(categoryRepositoryFindOneSpy).toHaveBeenNthCalledWith(
+        1,
+        findParam1,
+      );
+      expect(categoryRepositoryFindOneSpy).toHaveBeenNthCalledWith(
+        2,
+        findParam2,
+      );
+      expect(categoryRepositoryFindOneSpy).toHaveBeenNthCalledWith(
+        3,
+        findParam1,
+      );
+      expect(categoryRepositoryFindOneSpy).toHaveBeenCalledTimes(3);
       expect(categoryRepositoryUpdateSpy).toHaveBeenCalledWith(
         categoryId,
         updateCategoryDto,
@@ -215,34 +251,37 @@ describe('CategoryService', () => {
       expect(categoryRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('category not updated', async () => {
-      const findParam = {
+    it('category name already exist', async () => {
+      const findParam1 = {
         where: { id: categoryId },
+      };
+
+      const findParam2 = {
+        where: { name: updatedCategoryName },
       };
 
       const categoryRepositoryFindOneSpy = jest
         .spyOn(categoryRepository, 'findOne')
-        .mockResolvedValue(savedCategory);
-
-      const categoryRepositoryUpdateSpy = jest
-        .spyOn(categoryRepository, 'update')
-        .mockResolvedValue(updateResultFailure);
+        .mockResolvedValueOnce(savedCategory)
+        .mockResolvedValueOnce(savedCategory);
 
       try {
         await categoryService.update(categoryId, updateCategoryDto);
       } catch (err) {
-        expect(err).toBeInstanceOf(CategoryNotUpdatedError);
-        expect(err.message).toBe('category not updated');
+        expect(err).toBeInstanceOf(CategoryNameAlreadyExistsException);
+        expect(err.message).toBe('category name already exist');
         expect(err.status).toBe(400);
       }
 
-      expect(categoryRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
-      expect(categoryRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
-      expect(categoryRepositoryUpdateSpy).toHaveBeenCalledWith(
-        categoryId,
-        updateCategoryDto,
+      expect(categoryRepositoryFindOneSpy).toHaveBeenNthCalledWith(
+        1,
+        findParam1,
       );
-      expect(categoryRepositoryUpdateSpy).toHaveBeenCalledTimes(1);
+      expect(categoryRepositoryFindOneSpy).toHaveBeenNthCalledWith(
+        2,
+        findParam2,
+      );
+      expect(categoryRepositoryFindOneSpy).toHaveBeenCalledTimes(2);
     });
   });
 

@@ -14,7 +14,6 @@ describe('ProductService', () => {
   let productService: ProductService;
   let productRepository: ProductRepository;
 
-  const categoryName = faker.commerce.productAdjective();
   const productId = faker.datatype.number();
   const randomProductName = faker.commerce.productName();
   const randomProductPrice = +faker.commerce.price();

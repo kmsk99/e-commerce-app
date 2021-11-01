@@ -7,7 +7,6 @@ import { ProductEntity } from './entities/product.entity';
 import { ProductNotFoundError } from './exceptions/product-not-found-exception';
 import { ProductRepository } from './product.repository';
 
-// 순환종속성 문서 봐야함
 @Injectable()
 export class ProductService {
   constructor(
@@ -45,7 +44,7 @@ export class ProductService {
     await this.categoryService.findOne(categoryId);
 
     const result = await this.productRepository.find({
-      where: { category_id: categoryId },
+      where: { categoryId: categoryId },
     });
 
     return result;

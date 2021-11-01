@@ -39,9 +39,9 @@ describe('ProductService', () => {
 
   const updateProductDto: UpdateProductDto = {
     name: changedRandomProductName,
-    categoryId: changedRandomProductPrice,
-    quantity: changedCategoryId,
-    price: changedQuantity,
+    categoryId: changedCategoryId,
+    quantity: changedQuantity,
+    price: changedRandomProductPrice,
   };
 
   const savedProduct: ProductEntity = {
@@ -58,9 +58,9 @@ describe('ProductService', () => {
   const updatedProduct: ProductEntity = {
     id: productId,
     name: changedRandomProductName,
-    categoryId: changedRandomProductPrice,
-    quantity: changedCategoryId,
-    price: changedQuantity,
+    categoryId: changedCategoryId,
+    quantity: changedQuantity,
+    price: changedRandomProductPrice,
     createdAt: createdAt,
     updatedAt: updatedUpdatedAt,
     deletedAt: null,
@@ -106,7 +106,14 @@ describe('ProductService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ProductService, ProductRepository],
+      providers: [
+        ProductService,
+        ProductRepository,
+        {
+          provide: CategoryService,
+          useValue: { findOne: jest.fn() },
+        },
+      ],
     }).compile();
 
     productService = module.get<ProductService>(ProductService);
@@ -132,13 +139,28 @@ describe('ProductService', () => {
 
       const result = await productService.create(createProductDto);
 
-      expect(categoryServiceFindOneSpy).toHaveBeenCalledWith(
-        createProductDto.categoryId,
-      );
+      expect(categoryServiceFindOneSpy).toHaveBeenCalledWith(categoryId);
       expect(categoryServiceFindOneSpy).toHaveBeenCalledTimes(1);
       expect(productRepositorySaveSpy).toHaveBeenCalledWith(createProductDto);
       expect(productRepositorySaveSpy).toHaveBeenCalledTimes(1);
       expect(result).toStrictEqual(savedProduct);
+    });
+
+    it('category not found', async () => {
+      const categoryServiceFindOneSpy = jest
+        .spyOn(categoryService, 'findOne')
+        .mockRejectedValue(new CategoryNotFoundError());
+
+      try {
+        await productService.create(createProductDto);
+      } catch (err) {
+        expect(err).toBeInstanceOf(CategoryNotFoundError);
+        expect(err.message).toBe('category not found');
+        expect(err.status).toBe(400);
+      }
+
+      expect(categoryServiceFindOneSpy).toHaveBeenCalledWith(categoryId);
+      expect(categoryServiceFindOneSpy).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -159,8 +181,12 @@ describe('ProductService', () => {
   describe('findByCategory', () => {
     it('success', async () => {
       const findParam = {
-        where: { category_id: categoryId },
+        where: { categoryId: categoryId },
       };
+
+      const categoryServiceFindOneSpy = jest
+        .spyOn(categoryService, 'findOne')
+        .mockResolvedValue(foundCategoryId);
 
       const productRepositoryFindSpy = jest
         .spyOn(productRepository, 'find')
@@ -168,19 +194,17 @@ describe('ProductService', () => {
 
       const result = await productService.findByCategory(categoryId);
 
+      expect(categoryServiceFindOneSpy).toHaveBeenCalledWith(categoryId);
+      expect(categoryServiceFindOneSpy).toHaveBeenCalledTimes(1);
       expect(productRepositoryFindSpy).toHaveBeenCalledWith(findParam);
       expect(productRepositoryFindSpy).toHaveBeenCalledTimes(1);
       expect(result).toStrictEqual(savedProducts);
     });
 
     it('category not found', async () => {
-      const findParam = {
-        where: { category_id: categoryId },
-      };
-
-      const productRepositoryFindSpy = jest
-        .spyOn(productRepository, 'find')
-        .mockResolvedValue([]);
+      const categoryServiceFindOneSpy = jest
+        .spyOn(categoryService, 'findOne')
+        .mockRejectedValue(new CategoryNotFoundError());
 
       try {
         await productService.findByCategory(categoryId);
@@ -190,8 +214,8 @@ describe('ProductService', () => {
         expect(err.status).toBe(400);
       }
 
-      expect(productRepositoryFindSpy).toHaveBeenCalledWith(findParam);
-      expect(productRepositoryFindSpy).toHaveBeenCalledTimes(1);
+      expect(categoryServiceFindOneSpy).toHaveBeenCalledWith(categoryId);
+      expect(categoryServiceFindOneSpy).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -245,12 +269,21 @@ describe('ProductService', () => {
         .mockResolvedValueOnce(savedProduct)
         .mockResolvedValueOnce(updatedProduct);
 
+      const categoryServiceFindOneSpy = jest
+        .spyOn(categoryService, 'findOne')
+        .mockResolvedValue({
+          id: changedCategoryId,
+          ...foundCategoryId,
+        });
+
       const productRepositoryUpdateSpy = jest
         .spyOn(productRepository, 'update')
         .mockResolvedValue(updateResultSuccess);
 
       const result = await productService.update(productId, updateProductDto);
 
+      expect(categoryServiceFindOneSpy).toHaveBeenCalledWith(changedCategoryId);
+      expect(categoryServiceFindOneSpy).toHaveBeenCalledTimes(1);
       expect(productRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
       expect(productRepositoryFindOneSpy).toHaveBeenCalledTimes(2);
       expect(productRepositoryUpdateSpy).toHaveBeenCalledWith(
@@ -280,6 +313,33 @@ describe('ProductService', () => {
 
       expect(productRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
       expect(productRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('category not found', async () => {
+      const findParam = {
+        where: { id: productId },
+      };
+
+      const productRepositoryFindOneSpy = jest
+        .spyOn(productRepository, 'findOne')
+        .mockResolvedValueOnce(savedProduct);
+
+      const categoryServiceFindOneSpy = jest
+        .spyOn(categoryService, 'findOne')
+        .mockRejectedValue(new CategoryNotFoundError());
+
+      try {
+        await productService.update(productId, updateProductDto);
+      } catch (err) {
+        expect(err).toBeInstanceOf(CategoryNotFoundError);
+        expect(err.message).toBe('category not found');
+        expect(err.status).toBe(400);
+      }
+
+      expect(productRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
+      expect(productRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
+      expect(categoryServiceFindOneSpy).toHaveBeenCalledWith(changedCategoryId);
+      expect(categoryServiceFindOneSpy).toHaveBeenCalledTimes(1);
     });
   });
 

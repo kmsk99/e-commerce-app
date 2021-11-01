@@ -21,14 +21,14 @@ export class ProductController {
     return this.productService.create(createProductDto);
   }
 
-  @Get()
-  findAll() {
-    return this.productService.findAll();
+  @Get('search')
+  findByCategory(@Query('category') seachingCategoryId: number) {
+    return this.productService.findByCategory(seachingCategoryId);
   }
 
   @Get()
-  findByCategory(@Query('categoryId') seachingCategoryId: number) {
-    return this.productService.findByCategory(seachingCategoryId);
+  findAll() {
+    return this.productService.findAll();
   }
 
   @Get(':id')

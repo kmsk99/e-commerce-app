@@ -4,9 +4,7 @@ import * as request from 'supertest';
 import { Connection, getConnection } from 'typeorm';
 import { AppModule } from '@root/app.module';
 import * as faker from 'faker';
-import { isJWT, IS_JWT } from 'class-validator';
-import { response } from 'express';
-import { CategoryEntity } from '../src/category/entities/category.entity';
+import { isJWT } from 'class-validator';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
@@ -212,10 +210,10 @@ describe('AppController (e2e)', () => {
   });
 
   describe('/category', () => {
-    const categoryA = { name: faker.commerce.productAdjective() };
-    const categoryB = { name: faker.commerce.productAdjective() };
-    const categoryC = { name: faker.commerce.productAdjective() };
-    const categoryD = { name: faker.commerce.productAdjective() };
+    const categoryA = { name: 'Toy' };
+    const categoryB = { name: 'Food' };
+    const categoryC = { name: 'Berverage' };
+    const categoryD = { name: 'Kitchen' };
 
     describe('POST', () => {
       it('success categoryA', () => {
@@ -400,40 +398,166 @@ describe('AppController (e2e)', () => {
           .expect(201);
       });
 
-      it.todo('success productB', () => {
+      it('success productB', () => {
         return request(app.getHttpServer())
           .post('/products')
           .send(productB)
           .expect(201);
       });
 
-      it.todo('success productC', () => {
+      it('success productC', () => {
         return request(app.getHttpServer())
           .post('/products')
           .send(productC)
           .expect(201);
       });
 
-      it.todo('not exist category', () => {
+      it('category not found', () => {
         return request(app.getHttpServer())
           .post('/products')
           .send(productNotExistCategoryId)
-          .expect(201);
+          .expect({
+            statusCode: 400,
+            message: 'category not found',
+            error: 'Bad Request',
+          });
       });
     });
-    it.todo('GET');
-    describe('/:id', () => {
-      it.todo('GET');
-      it.todo('PATCH');
-      it.todo('DELETE');
-    });
-    describe('?cartegody={categotyID}', () => {
-      it.todo('GET');
-    });
-  });
 
-  describe('/{productId}', () => {
-    it.todo('GET');
+    describe('GET', () => {
+      it('success', () => {
+        return request(app.getHttpServer())
+          .get('/products')
+          .expect(200)
+          .expect((respone) => {
+            const result = respone.body;
+            expect(result.length).toBe(3);
+          });
+      });
+    });
+
+    describe('/:id', () => {
+      describe('GET', () => {
+        it('success', () => {
+          return request(app.getHttpServer())
+            .get('/products/1')
+            .expect(200)
+            .expect((respone) => {
+              const result = respone.body;
+              expect(result).toHaveProperty('name', productA.name);
+              expect(result).toHaveProperty('id', productA.categoryId);
+              expect(result).toHaveProperty('price', productA.price);
+              expect(result).toHaveProperty('quantity', productA.quantity);
+            });
+        });
+
+        it('product not found', () => {
+          return request(app.getHttpServer()).get('/products/4').expect({
+            statusCode: 400,
+            message: 'product not found',
+            error: 'Bad Request',
+          });
+        });
+      });
+
+      describe('PATCH', () => {
+        it('success', () => {
+          return request(app.getHttpServer())
+            .patch('/products/3')
+            .send(productA)
+            .expect(200)
+            .expect((respone) => {
+              const result = respone.body;
+              expect(result).toHaveProperty('name', productA.name);
+              expect(result).toHaveProperty('categoryId', productA.categoryId);
+              expect(result).toHaveProperty('price', productA.price);
+              expect(result).toHaveProperty('quantity', productA.quantity);
+            });
+        });
+
+        it('product not found', () => {
+          return request(app.getHttpServer())
+            .patch('/products/4')
+            .send(productA)
+            .expect({
+              statusCode: 400,
+              message: 'product not found',
+              error: 'Bad Request',
+            });
+        });
+
+        it('category not found', () => {
+          return request(app.getHttpServer())
+            .patch('/products/1')
+            .send(productNotExistCategoryId)
+            .expect({
+              statusCode: 400,
+              message: 'category not found',
+              error: 'Bad Request',
+            });
+        });
+      });
+
+      describe('DELETE', () => {
+        it('success', () => {
+          return request(app.getHttpServer()).delete('/products/3').expect(200);
+        });
+
+        it('product not found', () => {
+          return request(app.getHttpServer()).delete('/products/4').expect({
+            statusCode: 400,
+            message: 'product not found',
+            error: 'Bad Request',
+          });
+        });
+      });
+    });
+
+    describe('/search?category={categoryId}', () => {
+      describe('GET', () => {
+        it('category 1 return success', () => {
+          return request(app.getHttpServer())
+            .get('/products/search?category=1')
+            .expect(200)
+            .expect((respone) => {
+              const result = respone.body;
+              expect(result.length).toBe(1);
+              expect(result[0]).toHaveProperty('name', productA.name);
+              expect(result[0]).toHaveProperty(
+                'categoryId',
+                productA.categoryId,
+              );
+              expect(result[0]).toHaveProperty('price', productA.price);
+              expect(result[0]).toHaveProperty('quantity', productA.quantity);
+            });
+        });
+        it('category 2 return success', () => {
+          return request(app.getHttpServer())
+            .get('/products/search?category=2')
+            .expect(200)
+            .expect((respone) => {
+              const result = respone.body;
+              expect(result.length).toBe(1);
+              expect(result[0]).toHaveProperty('name', productB.name);
+              expect(result[0]).toHaveProperty(
+                'categoryId',
+                productB.categoryId,
+              );
+              expect(result[0]).toHaveProperty('price', productB.price);
+              expect(result[0]).toHaveProperty('quantity', productB.quantity);
+            });
+        });
+        it('category 3 not found', () => {
+          return request(app.getHttpServer())
+            .get('/products/search?category=3')
+            .expect({
+              statusCode: 400,
+              message: 'category not found',
+              error: 'Bad Request',
+            });
+        });
+      });
+    });
   });
 
   describe('/users', () => {

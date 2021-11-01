@@ -125,7 +125,7 @@ describe('ProductController', () => {
       expect(result).toBe(savedProducts);
     });
 
-    describe('?category=query', () => {
+    describe('/search?category=query', () => {
       it('GET', async () => {
         const productServiceFindByCategorySpy = jest
           .spyOn(productService, 'findByCategory')

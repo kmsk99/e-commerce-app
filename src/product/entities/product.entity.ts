@@ -4,7 +4,6 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
-  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -22,7 +21,7 @@ export class ProductEntity {
   price: number;
 
   @ManyToOne(() => CategoryEntity, (category) => category.id)
-  @JoinColumn({ name: 'category_id' })
+  @Column({ name: 'category_id' })
   categoryId: number;
 
   @Column()

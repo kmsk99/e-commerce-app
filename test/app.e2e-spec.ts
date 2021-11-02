@@ -91,7 +91,6 @@ describe('AppController (e2e)', () => {
         return request(app.getHttpServer())
           .post('/register')
           .send(userASameEmail)
-          .expect(400)
           .expect({
             statusCode: 400,
             message: 'email already exist',
@@ -103,7 +102,6 @@ describe('AppController (e2e)', () => {
         return request(app.getHttpServer())
           .post('/register')
           .send(userASameUsername)
-          .expect(400)
           .expect({
             statusCode: 400,
             message: 'username already exist',
@@ -115,7 +113,6 @@ describe('AppController (e2e)', () => {
         return request(app.getHttpServer())
           .post('/register')
           .send(userShortName)
-          .expect(400)
           .expect({
             statusCode: 400,
             message: ['username must be longer than or equal to 4 characters'],
@@ -127,7 +124,6 @@ describe('AppController (e2e)', () => {
         return request(app.getHttpServer())
           .post('/register')
           .send(userLongName)
-          .expect(400)
           .expect({
             statusCode: 400,
             message: [
@@ -141,7 +137,6 @@ describe('AppController (e2e)', () => {
         return request(app.getHttpServer())
           .post('/register')
           .send(userNotEmail)
-          .expect(400)
           .expect({
             statusCode: 400,
             message: ['email must be an email'],
@@ -186,25 +181,53 @@ describe('AppController (e2e)', () => {
       });
     });
 
-    describe('/profile GET', () => {
-      it('profile success', () => {
-        return request(app.getHttpServer())
-          .get('/profile')
-          .set('Authorization', `Bearer ${userAToken}`)
-          .expect((response: request.Response) => {
-            expect(response.body.username).toBe(userA.username);
-          })
-          .expect(200);
-      });
+    describe('/users', () => {
+      describe('GET', () => {
+        it('users success', () => {
+          return request(app.getHttpServer())
+            .get('/users')
+            .set('Authorization', `Bearer ${userAToken}`)
+            .expect((response: request.Response) => {
+              expect(response.body.username).toBe(userA.username);
+              expect(response.body.email).toBe(userA.email);
+            })
+            .expect(200);
+        });
 
-      it('Unauthorized', () => {
-        return request(app.getHttpServer())
-          .get('/profile')
-          .set('Authorization', `Bearer ${'randomjwt'}`)
-          .expect({
-            statusCode: 401,
-            message: 'Unauthorized',
+        it('Unauthorized', () => {
+          return request(app.getHttpServer())
+            .get('/users')
+            .set('Authorization', `Bearer ${'randomjwt'}`)
+            .expect({
+              statusCode: 401,
+              message: 'Unauthorized',
+            });
+        });
+      });
+      describe('/{userId}', () => {
+        describe('GET', () => {
+          it('userId 1 return', () => {
+            return request(app.getHttpServer())
+              .get('/users/1')
+              .set('Authorization', `Bearer ${userAToken}`)
+              .expect((response: request.Response) => {
+                expect(response.body.username).toBe(userA.username);
+                expect(response.body.email).toBe(userA.email);
+              })
+              .expect(200);
           });
+
+          it('not exist userId', () => {
+            return request(app.getHttpServer())
+              .get('/users/2')
+              .set('Authorization', `Bearer ${userAToken}`)
+              .expect({
+                statusCode: 400,
+                message: 'user not found',
+                error: 'Bad Request',
+              });
+          });
+        });
       });
     });
   });
@@ -557,14 +580,6 @@ describe('AppController (e2e)', () => {
             });
         });
       });
-    });
-  });
-
-  describe('/users', () => {
-    it.todo('GET');
-    describe('/{userId}', () => {
-      it.todo('GET');
-      it.todo('GET');
     });
   });
 

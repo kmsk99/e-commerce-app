@@ -3,9 +3,9 @@ import { validate } from 'class-validator';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UserEntity } from './entities/user.entity';
 import { UserRepository } from './user.repository';
-import { UsernameAlreadyExistsException } from './exceptions/username-already-exist-exception';
-import { EmailAlreadyExistsException } from './exceptions/email-already-exist-exception';
-import { UserNotFoundException } from './exceptions/user-not-found-exception';
+import { UsernameAlreadyExistsException } from './exceptions/username-already-exist.exception';
+import { EmailAlreadyExistsException } from './exceptions/email-already-exist.exception';
+import { UserNotFoundException } from './exceptions/user-not-found.exception';
 
 @Injectable()
 export class UserService {
@@ -45,7 +45,23 @@ export class UserService {
     if (!thisUser) {
       throw new UserNotFoundException();
     }
+    return this.passwordFilter(thisUser);
+  }
+
+  async findOnePassword(name: string) {
+    const thisUser = await this.userRepository.findOne({ username: name });
+    if (!thisUser) {
+      throw new UserNotFoundException();
+    }
     return thisUser;
+  }
+
+  async findByUserId(id: number) {
+    const thisUser = await this.userRepository.findOne({ id: id });
+    if (!thisUser) {
+      throw new UserNotFoundException();
+    }
+    return this.passwordFilter(thisUser);
   }
 
   passwordFilter(result: UserEntity) {

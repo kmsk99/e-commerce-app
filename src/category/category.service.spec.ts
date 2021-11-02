@@ -6,8 +6,8 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CategoryEntity } from './entities/category.entity';
 import { CategoryRepository } from './category.repository';
 import { UpdateResult } from 'typeorm';
-import { CategoryNotFoundError } from './exceptions/category-not-found-exception';
-import { CategoryNameAlreadyExistsException } from './exceptions/category-name-already-exist-exception';
+import { CategoryNotFoundError } from './exceptions/category-not-found.exception';
+import { CategoryNameAlreadyExistsException } from './exceptions/category-name-already-exist.exception';
 
 describe('CategoryService', () => {
   let categoryService: CategoryService;

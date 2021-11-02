@@ -5,11 +5,11 @@ import * as faker from 'faker';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductEntity } from './entities/product.entity';
-import { ProductNotFoundError } from './exceptions/product-not-found-exception';
+import { ProductNotFoundError } from './exceptions/product-not-found.exception';
 import { UpdateResult } from 'typeorm';
 import { CategoryEntity } from '@root/category/entities/category.entity';
 import { CategoryService } from '@root/category/category.service';
-import { CategoryNotFoundError } from '@root/category/exceptions/category-not-found-exception';
+import { CategoryNotFoundError } from '@root/category/exceptions/category-not-found.exception';
 
 describe('ProductService', () => {
   let productService: ProductService;

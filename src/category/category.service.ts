@@ -1,11 +1,11 @@
-import { HttpException, Injectable, HttpStatus, Logger } from '@nestjs/common';
+import { HttpException, Injectable, HttpStatus } from '@nestjs/common';
 import { CategoryRepository } from './category.repository';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { validate } from 'class-validator';
 import { CategoryEntity } from './entities/category.entity';
-import { CategoryNotFoundError } from './exceptions/category-not-found-exception';
-import { CategoryNameAlreadyExistsException } from './exceptions/category-name-already-exist-exception';
+import { CategoryNotFoundError } from './exceptions/category-not-found.exception';
+import { CategoryNameAlreadyExistsException } from './exceptions/category-name-already-exist.exception';
 
 @Injectable()
 export class CategoryService {

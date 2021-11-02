@@ -5,7 +5,7 @@ import * as faker from 'faker';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CategoryEntity } from './entities/category.entity';
-import { CategoryNameAlreadyExistsException } from './exceptions/category-name-already-exist-exception';
+import { CategoryNameAlreadyExistsException } from './exceptions/category-name-already-exist.exception';
 
 describe('CategoryController', () => {
   let categoryController: CategoryController;

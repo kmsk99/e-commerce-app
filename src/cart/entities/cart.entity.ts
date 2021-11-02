@@ -4,7 +4,6 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
-  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -16,10 +15,10 @@ export class CartEntity {
   id: number;
 
   @ManyToOne(() => UserEntity, (users) => users.id)
-  @JoinColumn({ name: 'user_id' })
+  @Column({ name: 'user_id' })
   userId: number;
 
-  @Column({ type: 'decimal' })
+  @Column({ type: 'decimal', default: 0 })
   total: number;
 
   @CreateDateColumn({ name: 'created_at' })

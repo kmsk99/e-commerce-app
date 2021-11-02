@@ -4,7 +4,7 @@ import { validate } from 'class-validator';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ProductEntity } from './entities/product.entity';
-import { ProductNotFoundError } from './exceptions/product-not-found-exception';
+import { ProductNotFoundError } from './exceptions/product-not-found.exception';
 import { ProductRepository } from './product.repository';
 
 @Injectable()

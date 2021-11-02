@@ -3,9 +3,9 @@ import { UserRepository } from './user.repository';
 import { UserService } from './user.service';
 import * as faker from 'faker';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UsernameAlreadyExistsException } from './exceptions/username-already-exist-exception';
-import { EmailAlreadyExistsException } from './exceptions/email-already-exist-exception';
-import { UserNotFoundException } from './exceptions/user-not-found-exception';
+import { UsernameAlreadyExistsException } from './exceptions/username-already-exist.exception';
+import { EmailAlreadyExistsException } from './exceptions/email-already-exist.exception';
+import { UserNotFoundException } from './exceptions/user-not-found.exception';
 
 describe('UserService', () => {
   let userService: UserService;
@@ -142,6 +142,7 @@ describe('UserService', () => {
       });
       expect(userRepositoryFindOneSpy).toBeCalledTimes(1);
     });
+
     it('Successfully findOne', async () => {
       const userRepositoryFindOneSpy = jest
         .spyOn(userRepository, 'findOne')
@@ -153,7 +154,77 @@ describe('UserService', () => {
         username: randomUsername,
       });
       expect(userRepositoryFindOneSpy).toBeCalledTimes(1);
-      expect(result).toBe(savedUser);
+      expect(result).toStrictEqual(fileteredUser);
+    });
+  });
+
+  describe('findOnePassword', () => {
+    it('Username is not found', async () => {
+      const userRepositoryFindOneSpy = jest
+        .spyOn(userRepository, 'findOne')
+        .mockResolvedValue(undefined);
+
+      try {
+        await userService.findOnePassword(randomUsername);
+      } catch (err) {
+        expect(err).toBeInstanceOf(UserNotFoundException);
+        expect(err.message).toBe('user not found');
+        expect(err.status).toBe(400);
+      }
+
+      expect(userRepositoryFindOneSpy).toHaveBeenCalledWith({
+        username: randomUsername,
+      });
+      expect(userRepositoryFindOneSpy).toBeCalledTimes(1);
+    });
+
+    it('Successfully findOne', async () => {
+      const userRepositoryFindOneSpy = jest
+        .spyOn(userRepository, 'findOne')
+        .mockResolvedValue(savedUser);
+
+      const result = await userService.findOnePassword(randomUsername);
+
+      expect(userRepositoryFindOneSpy).toHaveBeenCalledWith({
+        username: randomUsername,
+      });
+      expect(userRepositoryFindOneSpy).toBeCalledTimes(1);
+      expect(result).toStrictEqual(savedUser);
+    });
+  });
+
+  describe('findByUserId', () => {
+    it('Username is not found', async () => {
+      const userRepositoryFindOneSpy = jest
+        .spyOn(userRepository, 'findOne')
+        .mockResolvedValue(undefined);
+
+      try {
+        await userService.findByUserId(userId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(UserNotFoundException);
+        expect(err.message).toBe('user not found');
+        expect(err.status).toBe(400);
+      }
+
+      expect(userRepositoryFindOneSpy).toHaveBeenCalledWith({
+        id: userId,
+      });
+      expect(userRepositoryFindOneSpy).toBeCalledTimes(1);
+    });
+
+    it('Successfully findOne', async () => {
+      const userRepositoryFindOneSpy = jest
+        .spyOn(userRepository, 'findOne')
+        .mockResolvedValue(savedUser);
+
+      const result = await userService.findByUserId(userId);
+
+      expect(userRepositoryFindOneSpy).toHaveBeenCalledWith({
+        id: userId,
+      });
+      expect(userRepositoryFindOneSpy).toBeCalledTimes(1);
+      expect(result).toStrictEqual(fileteredUser);
     });
   });
 

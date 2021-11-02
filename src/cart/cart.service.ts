@@ -1,26 +1,62 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { UserService } from '@root/user/user.service';
+import { validate } from 'class-validator';
+import { CartRepository } from './cart.repository';
 import { CreateCartDto } from './dto/create-cart.dto';
-import { UpdateCartDto } from './dto/update-cart.dto';
+import { CartEntity } from './entities/cart.entity';
+import { CartNotFoundError } from './exceptions/cart-not-found.exception';
 
 @Injectable()
 export class CartService {
-  create(createCartDto: CreateCartDto) {
-    return 'This action adds a new cart';
+  constructor(
+    private readonly cartRepository: CartRepository,
+    private readonly userService: UserService,
+  ) {}
+
+  async create(createCartDto: CreateCartDto) {
+    const validation_error = await validate(createCartDto);
+    if (validation_error.length > 0) {
+      throw new HttpException(validation_error, HttpStatus.BAD_REQUEST);
+    }
+
+    const { userId } = createCartDto;
+
+    await this.userService.findByUserId(userId);
+
+    const newCart = new CartEntity();
+    newCart.userId = userId;
+
+    const result = await this.cartRepository.save(newCart);
+
+    return result;
   }
 
-  findAll() {
-    return `This action returns all cart`;
+  async findOne(id: number) {
+    const result = await this.cartRepository.findOne({ where: { id: id } });
+
+    if (!result) {
+      throw new CartNotFoundError();
+    }
+
+    return result;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} cart`;
+  async findOneByUserId(userId: number) {
+    let result = await this.cartRepository.findOne({
+      where: { userId: userId },
+    });
+
+    if (!result) {
+      result = await this.create({ userId: userId });
+    }
+
+    return result;
   }
 
-  update(id: number, updateCartDto: UpdateCartDto) {
-    return `This action updates a #${id} cart`;
-  }
+  async remove(id: number) {
+    const thisProduct = await this.findOne(id);
+    const result = await this.cartRepository.softRemove(thisProduct);
 
-  remove(id: number) {
-    return `This action removes a #${id} cart`;
+    return result;
   }
 }

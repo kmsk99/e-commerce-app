@@ -32,8 +32,8 @@ export class CartItemController {
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')
-  findOne(@Request() req, @Param('id') id: string) {
-    return this.cartItemService.findOne(req.user.id, +id);
+  findOne(@Param('id') id: string) {
+    return this.cartItemService.findOne(+id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -48,7 +48,7 @@ export class CartItemController {
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  remove(@Request() req, @Param('id') id: string) {
-    return this.cartItemService.remove(req.user.id, +id);
+  remove(@Param('id') id: string) {
+    return this.cartItemService.remove(+id);
   }
 }

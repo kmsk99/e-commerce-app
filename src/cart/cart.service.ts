@@ -3,6 +3,7 @@ import { UserService } from '@root/user/user.service';
 import { validate } from 'class-validator';
 import { CartRepository } from './cart.repository';
 import { CreateCartDto } from './dto/create-cart.dto';
+import { UpdateCartDto } from './dto/update-cart.dto';
 import { CartEntity } from './entities/cart.entity';
 import { CartNotFoundError } from './exceptions/cart-not-found.exception';
 
@@ -49,6 +50,14 @@ export class CartService {
     if (!result) {
       result = await this.create({ userId: userId });
     }
+
+    return result;
+  }
+
+  async update(id: number, updateCartDto: UpdateCartDto) {
+    await this.findOne(id);
+
+    const result = await this.cartRepository.update(id, updateCartDto);
 
     return result;
   }

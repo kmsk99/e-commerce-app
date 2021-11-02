@@ -128,15 +128,9 @@ describe('CartItemController', () => {
           .spyOn(cartItemService, 'findOne')
           .mockResolvedValue(savedCartItem);
 
-        const result = await cartItemController.findOne(
-          request,
-          String(cartItemId),
-        );
+        const result = await cartItemController.findOne(String(cartItemId));
 
-        expect(cartItemServiceFindOneSpy).toHaveBeenCalledWith(
-          userId,
-          cartItemId,
-        );
+        expect(cartItemServiceFindOneSpy).toHaveBeenCalledWith(cartItemId);
         expect(cartItemServiceFindOneSpy).toBeCalledTimes(1);
         expect(result).toBe(savedCartItem);
       });
@@ -166,15 +160,9 @@ describe('CartItemController', () => {
           .spyOn(cartItemService, 'remove')
           .mockResolvedValue(deletedCartItem);
 
-        const result = await cartItemController.remove(
-          request,
-          String(cartItemId),
-        );
+        const result = await cartItemController.remove(String(cartItemId));
 
-        expect(cartItemServiceRemoveSpy).toHaveBeenCalledWith(
-          userId,
-          cartItemId,
-        );
+        expect(cartItemServiceRemoveSpy).toHaveBeenCalledWith(cartItemId);
         expect(cartItemServiceRemoveSpy).toBeCalledTimes(1);
         expect(result).toBe(deletedCartItem);
       });

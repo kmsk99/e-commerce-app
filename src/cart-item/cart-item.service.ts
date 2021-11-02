@@ -1,36 +1,121 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpStatus, HttpException } from '@nestjs/common';
+import { CartService } from '@root/cart/cart.service';
+import { ProductService } from '@root/product/product.service';
+import { validate } from 'class-validator';
+import { CartItemRepository } from './cart-item.repository';
 import { CreateCartItemDto } from './dto/create-cart-item.dto';
 import { UpdateCartItemDto } from './dto/update-cart-item.dto';
+import { CartItemEntity } from './entities/cart-item.entity';
+import { CartItemNotFoundError } from './exceptions/cart-item-not-found.exception';
+import { ProductQuantityLackError } from './exceptions/product-quantity-lack.exception';
 
 @Injectable()
 export class CartItemService {
-  create(userId: number, createCartItemDto: CreateCartItemDto) {
-    return new Promise(() => {
-      return '';
-    });
+  constructor(
+    private readonly cartItemRepository: CartItemRepository,
+    private readonly cartService: CartService,
+    private readonly productService: ProductService,
+  ) {}
+
+  async create(userId: number, createCartItemDto: CreateCartItemDto) {
+    const validation_error = await validate(createCartItemDto);
+    if (validation_error.length > 0) {
+      throw new HttpException(validation_error, HttpStatus.BAD_REQUEST);
+    }
+
+    const { productId, quantity } = createCartItemDto;
+
+    const thisCart = await this.cartService.findOneByUserId(userId);
+
+    await this.checkProductQuantity(productId, quantity);
+
+    const cartId = thisCart.id;
+    const newCart = new CartItemEntity();
+    newCart.cartId = cartId;
+    newCart.productId = productId;
+    newCart.quantity = quantity;
+
+    const result = await this.cartItemRepository.save(newCart);
+
+    await this.calculateTotalPrice(cartId);
+
+    return result;
   }
 
-  findAll(userId: number) {
-    return new Promise(() => {
-      return '';
-    });
+  async findAll(userId: number) {
+    const thisCart = await this.cartService.findOneByUserId(userId);
+    const result = await this.cartItemRepository.find({ cartId: thisCart.id });
+
+    return result;
   }
 
-  findOne(userId: number, id: number) {
-    return new Promise(() => {
-      return '';
-    });
+  async findOne(id: number) {
+    const result = await this.cartItemRepository.findOne({ id: id });
+
+    if (!result) {
+      throw new CartItemNotFoundError();
+    }
+
+    return result;
   }
 
-  update(userId: number, id: number, updateCartItemDto: UpdateCartItemDto) {
-    return new Promise(() => {
-      return '';
+  async update(
+    userId: number,
+    id: number,
+    updateCartItemDto: UpdateCartItemDto,
+  ) {
+    const validation_error = await validate(updateCartItemDto);
+    if (validation_error.length > 0) {
+      throw new HttpException(validation_error, HttpStatus.BAD_REQUEST);
+    }
+
+    const { quantity } = updateCartItemDto;
+
+    const thisCartItem = await this.findOne(id);
+
+    await this.checkProductQuantity(thisCartItem.productId, quantity);
+
+    await this.cartItemRepository.update(id, {
+      quantity: quantity,
     });
+
+    await this.calculateTotalPrice(id);
+
+    const result = await this.findOne(id);
+
+    return result;
   }
 
-  remove(userId: number, id: number) {
-    return new Promise(() => {
-      return '';
+  async remove(id: number) {
+    const thisCartItem = await this.findOne(id);
+    const result = await this.cartItemRepository.softRemove(thisCartItem);
+
+    return result;
+  }
+
+  async calculateTotalPrice(cartId: number) {
+    let totalPrice = 0;
+    const cartItems: CartItemEntity[] = await this.cartItemRepository.find({
+      cartId: cartId,
     });
+
+    for (const cartItem of cartItems) {
+      const thisProduct = await this.productService.findOne(cartItem.productId);
+      totalPrice += thisProduct.price * cartItem.quantity;
+    }
+
+    const result = await this.cartService.update(cartId, { total: totalPrice });
+
+    return result;
+  }
+
+  async checkProductQuantity(productId: number, quantity: number) {
+    const thisProduct = await this.productService.findOne(productId);
+
+    if (thisProduct.quantity < quantity) {
+      throw new ProductQuantityLackError();
+    }
+
+    return thisProduct;
   }
 }

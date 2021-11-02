@@ -1,34 +1,54 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { CartItemService } from './cart-item.service';
 import { CreateCartItemDto } from './dto/create-cart-item.dto';
 import { UpdateCartItemDto } from './dto/update-cart-item.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
-@Controller('cart-item')
+@Controller('cart')
 export class CartItemController {
   constructor(private readonly cartItemService: CartItemService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() createCartItemDto: CreateCartItemDto) {
-    return this.cartItemService.create(createCartItemDto);
+  create(@Request() req, @Body() createCartItemDto: CreateCartItemDto) {
+    return this.cartItemService.create(req.user.id, createCartItemDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get()
-  findAll() {
-    return this.cartItemService.findAll();
+  findAll(@Request() req) {
+    return this.cartItemService.findAll(req.user.id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.cartItemService.findOne(+id);
+  findOne(@Request() req, @Param('id') id: string) {
+    return this.cartItemService.findOne(req.user.id, +id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCartItemDto: UpdateCartItemDto) {
-    return this.cartItemService.update(+id, updateCartItemDto);
+  update(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() updateCartItemDto: UpdateCartItemDto,
+  ) {
+    return this.cartItemService.update(req.user.id, +id, updateCartItemDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.cartItemService.remove(+id);
+  remove(@Request() req, @Param('id') id: string) {
+    return this.cartItemService.remove(req.user.id, +id);
   }
 }

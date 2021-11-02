@@ -2,7 +2,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CartController } from './cart.controller';
 import { CartService } from './cart.service';
 import * as faker from 'faker';
-import { CreateCartDto } from './dto/create-cart.dto';
 import { CartEntity } from './entities/cart.entity';
 
 describe('CartController', () => {
@@ -14,7 +13,6 @@ describe('CartController', () => {
   const username = faker.internet.userName();
   const createdAt = faker.date.recent();
   const updatedAt = faker.date.recent();
-  const deletedAt = faker.date.recent();
 
   const request = { user: { id: userId, username: username } };
 

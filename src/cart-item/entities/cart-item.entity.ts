@@ -17,12 +17,12 @@ export class CartItemEntity {
   id: number;
 
   @ManyToOne(() => ProductEntity, (product) => product.id)
-  @JoinColumn({ name: 'product_id' })
+  @Column({ name: 'product_id' })
   productId: number;
 
   @ManyToOne(() => UserEntity, (users) => users.id)
-  @JoinColumn({ name: 'user_id' })
-  userId: number;
+  @Column({ name: 'cart_id' })
+  cartId: number;
 
   @Column()
   quantity: number;

@@ -4,23 +4,33 @@ import { UpdateCartItemDto } from './dto/update-cart-item.dto';
 
 @Injectable()
 export class CartItemService {
-  create(createCartItemDto: CreateCartItemDto) {
-    return 'This action adds a new cartItem';
+  create(userId: number, createCartItemDto: CreateCartItemDto) {
+    return new Promise(() => {
+      return '';
+    });
   }
 
-  findAll() {
-    return `This action returns all cartItem`;
+  findAll(userId: number) {
+    return new Promise(() => {
+      return '';
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} cartItem`;
+  findOne(userId: number, id: number) {
+    return new Promise(() => {
+      return '';
+    });
   }
 
-  update(id: number, updateCartItemDto: UpdateCartItemDto) {
-    return `This action updates a #${id} cartItem`;
+  update(userId: number, id: number, updateCartItemDto: UpdateCartItemDto) {
+    return new Promise(() => {
+      return '';
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} cartItem`;
+  remove(userId: number, id: number) {
+    return new Promise(() => {
+      return '';
+    });
   }
 }

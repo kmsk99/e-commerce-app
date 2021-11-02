@@ -5,8 +5,5 @@ export class CreateCartItemDto {
   readonly productId: number;
 
   @IsNotEmpty()
-  readonly cartId: number;
-
-  @IsNotEmpty()
   readonly quantity: number;
 }

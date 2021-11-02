@@ -11,7 +11,13 @@ describe('AppController', () => {
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       controllers: [AppController],
-      providers: [AuthService, UserService],
+      providers: [
+        { provide: AuthService, useValue: { login: jest.fn() } },
+        {
+          provide: UserService,
+          useValue: { findOne: jest.fn(), findByUserId: jest.fn() },
+        },
+      ],
     }).compile();
 
     appController = app.get<AppController>(AppController);

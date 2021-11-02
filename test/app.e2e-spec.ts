@@ -8,6 +8,7 @@ import { isJWT } from 'class-validator';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
+  let userAToken: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -35,8 +36,6 @@ describe('AppController (e2e)', () => {
   });
 
   describe('user', () => {
-    let userAToken: string;
-
     const userA = {
       username: faker.internet.userName(),
       email: faker.internet.email(),
@@ -584,7 +583,32 @@ describe('AppController (e2e)', () => {
   });
 
   describe('/cart', () => {
-    it.todo('POST');
+    describe('GET', () => {
+      it('success', () => {
+        return request(app.getHttpServer())
+          .get('/cart')
+          .set('Authorization', `Bearer ${userAToken}`)
+          .expect((response: request.Response) => {
+            expect(response.body).toHaveProperty('userId', 1);
+            expect(response.body).toHaveProperty('deletedAt', null);
+            expect(response.body).toHaveProperty('id', 1);
+            expect(response.body).toHaveProperty('total', '0');
+            expect(response.body).toHaveProperty('createdAt');
+            expect(response.body).toHaveProperty('updatedAt');
+          })
+          .expect(200);
+      });
+
+      it('Unauthorized', () => {
+        return request(app.getHttpServer())
+          .get('/cart')
+          .set('Authorization', `Bearer ${'randomjwt'}`)
+          .expect({
+            statusCode: 401,
+            message: 'Unauthorized',
+          });
+      });
+    });
     describe('/{cartId}', () => {
       it.todo('POST');
       it.todo('GET');

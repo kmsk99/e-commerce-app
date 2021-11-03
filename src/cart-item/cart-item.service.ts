@@ -8,6 +8,7 @@ import { UpdateCartItemDto } from './dto/update-cart-item.dto';
 import { CartItemEntity } from './entities/cart-item.entity';
 import { CartItemNotFoundError } from './exceptions/cart-item-not-found.exception';
 import { ProductQuantityLackError } from './exceptions/product-quantity-lack.exception';
+import { ProductAlreadyExistsInCartError } from './exceptions/product-already-exists-in-cart.exception';
 
 @Injectable()
 export class CartItemService {
@@ -26,6 +27,14 @@ export class CartItemService {
     const { productId, quantity } = createCartItemDto;
 
     const thisCart = await this.cartService.findOneByUserId(userId);
+
+    const thisProduct = await this.cartItemRepository.findOne({
+      where: { productId: productId, cartId: thisCart.id },
+    });
+
+    if (thisProduct) {
+      throw new ProductAlreadyExistsInCartError();
+    }
 
     await this.checkProductQuantity(productId, quantity);
 

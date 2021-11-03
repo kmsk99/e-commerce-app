@@ -141,13 +141,11 @@ describe('CartItemController', () => {
           .mockResolvedValue(updatedCartItem);
 
         const result = await cartItemController.update(
-          request,
           String(cartItemId),
           updateCartItemDto,
         );
 
         expect(cartItemServiceUpdateSpy).toHaveBeenCalledWith(
-          userId,
           cartItemId,
           updateCartItemDto,
         );

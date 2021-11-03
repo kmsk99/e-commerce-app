@@ -39,11 +39,10 @@ export class CartItemController {
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
   update(
-    @Request() req,
     @Param('id') id: string,
     @Body() updateCartItemDto: UpdateCartItemDto,
   ) {
-    return this.cartItemService.update(req.user.id, +id, updateCartItemDto);
+    return this.cartItemService.update(+id, updateCartItemDto);
   }
 
   @UseGuards(JwtAuthGuard)

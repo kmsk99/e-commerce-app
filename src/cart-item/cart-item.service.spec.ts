@@ -10,6 +10,11 @@ import { ProductEntity } from '../product/entities/product.entity';
 import { UpdateResult } from 'typeorm';
 import { CreateCartItemDto } from './dto/create-cart-item.dto';
 import { UpdateCartItemDto } from './dto/update-cart-item.dto';
+import { CartNotFoundError } from '@root/cart/exceptions/cart-not-found.exception';
+import { ProductAlreadyExistsInCartError } from './exceptions/product-already-exists-in-cart.exception';
+import { ProductNotFoundError } from '../product/exceptions/product-not-found.exception';
+import { ProductQuantityLackError } from './exceptions/product-quantity-lack.exception';
+import { CartItemNotFoundError } from './exceptions/cart-item-not-found.exception';
 
 describe('CartItemService', () => {
   let cartItemService: CartItemService;
@@ -28,7 +33,6 @@ describe('CartItemService', () => {
   const updatedQuantity = 25;
   const productQuantityEnough = 30;
   const productQuantityLack = 10;
-  const username = faker.internet.userName();
   const createdAt = faker.date.recent();
   const updatedAt = faker.date.recent();
   const updatedUpdatedAt = faker.date.recent();
@@ -107,15 +111,6 @@ describe('CartItemService', () => {
     deletedAt: null,
   };
 
-  const updatedCart: CartEntity = {
-    id: cartId,
-    userId: userId,
-    total: updatedTotal,
-    createdAt: createdAt,
-    updatedAt: updatedUpdatedAt,
-    deletedAt: undefined,
-  };
-
   const updateCartResultSuccess: UpdateResult = {
     generatedMaps: [
       {
@@ -172,7 +167,7 @@ describe('CartItemService', () => {
         .spyOn(cartItemRepository, 'findOne')
         .mockResolvedValue(undefined);
 
-      const productServicefindOneSpy = jest
+      const productServiceFindOneSpy = jest
         .spyOn(productService, 'findOne')
         .mockResolvedValue(foundEnoughProduct);
 
@@ -196,8 +191,8 @@ describe('CartItemService', () => {
         where: { productId: productId, cartId: cartId },
       });
       expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
-      expect(productServicefindOneSpy).toHaveBeenCalledWith(productId);
-      expect(productServicefindOneSpy).toHaveBeenCalledTimes(2);
+      expect(productServiceFindOneSpy).toHaveBeenCalledWith(productId);
+      expect(productServiceFindOneSpy).toHaveBeenCalledTimes(2);
       expect(cartItemRepositorySaveSpy).toHaveBeenCalledWith({
         cartId: cartId,
         ...createCartItemDto,
@@ -213,275 +208,450 @@ describe('CartItemService', () => {
       expect(cartServiceUpdateSpy).toHaveBeenCalledTimes(1);
       expect(result).toStrictEqual(savedCartItem);
     });
+
+    it('cart not found', async () => {
+      const cartServicefindOneByUserIdSpy = jest
+        .spyOn(cartService, 'findOneByUserId')
+        .mockRejectedValue(new CartNotFoundError());
+
+      try {
+        await cartItemService.create(userId, createCartItemDto);
+      } catch (err) {
+        expect(err).toBeInstanceOf(CartNotFoundError);
+        expect(err.message).toBe('cart not found');
+        expect(err.status).toBe(400);
+      }
+
+      expect(cartServicefindOneByUserIdSpy).toHaveBeenCalledWith(userId);
+      expect(cartServicefindOneByUserIdSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('product already exists in cart', async () => {
+      const cartServicefindOneByUserIdSpy = jest
+        .spyOn(cartService, 'findOneByUserId')
+        .mockResolvedValue(foundCart);
+
+      const cartItemRepositoryFindOneSpy = jest
+        .spyOn(cartItemRepository, 'findOne')
+        .mockResolvedValue(savedCartItem);
+
+      try {
+        await cartItemService.create(userId, createCartItemDto);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ProductAlreadyExistsInCartError);
+        expect(err.message).toBe('product already exists in cart');
+        expect(err.status).toBe(400);
+      }
+
+      expect(cartServicefindOneByUserIdSpy).toHaveBeenCalledWith(userId);
+      expect(cartServicefindOneByUserIdSpy).toHaveBeenCalledTimes(1);
+      expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledWith({
+        where: { productId: productId, cartId: cartId },
+      });
+      expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('product not found', async () => {
+      const cartServicefindOneByUserIdSpy = jest
+        .spyOn(cartService, 'findOneByUserId')
+        .mockResolvedValue(foundCart);
+
+      const cartItemRepositoryFindOneSpy = jest
+        .spyOn(cartItemRepository, 'findOne')
+        .mockResolvedValue(undefined);
+
+      const productServiceFindOneSpy = jest
+        .spyOn(productService, 'findOne')
+        .mockRejectedValue(new ProductNotFoundError());
+
+      try {
+        await cartItemService.create(userId, createCartItemDto);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ProductNotFoundError);
+        expect(err.message).toBe('product not found');
+        expect(err.status).toBe(400);
+      }
+
+      expect(cartServicefindOneByUserIdSpy).toHaveBeenCalledWith(userId);
+      expect(cartServicefindOneByUserIdSpy).toHaveBeenCalledTimes(1);
+      expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledWith({
+        where: { productId: productId, cartId: cartId },
+      });
+      expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
+      expect(productServiceFindOneSpy).toHaveBeenCalledWith(productId);
+      expect(productServiceFindOneSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('product quantity lack', async () => {
+      const cartServicefindOneByUserIdSpy = jest
+        .spyOn(cartService, 'findOneByUserId')
+        .mockResolvedValue(foundCart);
+
+      const cartItemRepositoryFindOneSpy = jest
+        .spyOn(cartItemRepository, 'findOne')
+        .mockResolvedValue(undefined);
+
+      const productServiceFindOneSpy = jest
+        .spyOn(productService, 'findOne')
+        .mockResolvedValue(foundLackProduct);
+
+      try {
+        await cartItemService.create(userId, createCartItemDto);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ProductQuantityLackError);
+        expect(err.message).toBe('product quantity lack');
+        expect(err.status).toBe(400);
+      }
+
+      expect(cartServicefindOneByUserIdSpy).toHaveBeenCalledWith(userId);
+      expect(cartServicefindOneByUserIdSpy).toHaveBeenCalledTimes(1);
+      expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledWith({
+        where: { productId: productId, cartId: cartId },
+      });
+      expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
+      expect(productServiceFindOneSpy).toHaveBeenCalledWith(productId);
+      expect(productServiceFindOneSpy).toHaveBeenCalledTimes(1);
+    });
   });
-  //   it.todo('cart not found', async () => {
-  //     const categoryServiceFindOneSpy = jest
-  //       .spyOn(categoryService, 'findOne')
-  //       .mockRejectedValue(new CategoryNotFoundError());
 
-  //     try {
-  //       await productService.create(createProductDto);
-  //     } catch (err) {
-  //       expect(err).toBeInstanceOf(CategoryNotFoundError);
-  //       expect(err.message).toBe('category not found');
-  //       expect(err.status).toBe(400);
-  //     }
+  describe('findAll', () => {
+    it('success', async () => {
+      const cartServiceFindOneByUserId = jest
+        .spyOn(cartService, 'findOneByUserId')
+        .mockResolvedValue(foundCart);
 
-  //     expect(categoryServiceFindOneSpy).toHaveBeenCalledWith(categoryId);
-  //     expect(categoryServiceFindOneSpy).toHaveBeenCalledTimes(1);
-  //   });
+      const cartItemRepositoryFindSpy = jest
+        .spyOn(cartItemRepository, 'find')
+        .mockResolvedValue(savedCartItems);
 
-  //   it.todo('product not found', async () => {
-  //     const categoryServiceFindOneSpy = jest
-  //       .spyOn(categoryService, 'findOne')
-  //       .mockRejectedValue(new CategoryNotFoundError());
+      const result = await cartItemService.findAll(userId);
 
-  //     try {
-  //       await productService.create(createProductDto);
-  //     } catch (err) {
-  //       expect(err).toBeInstanceOf(CategoryNotFoundError);
-  //       expect(err.message).toBe('category not found');
-  //       expect(err.status).toBe(400);
-  //     }
+      expect(cartServiceFindOneByUserId).toHaveBeenCalledWith(userId);
+      expect(cartServiceFindOneByUserId).toHaveBeenCalledTimes(1);
+      expect(cartItemRepositoryFindSpy).toHaveBeenCalledWith({
+        cartId: cartId,
+      });
+      expect(cartItemRepositoryFindSpy).toHaveBeenCalledTimes(1);
+      expect(result).toStrictEqual(savedCartItems);
+    });
 
-  //     expect(categoryServiceFindOneSpy).toHaveBeenCalledWith(categoryId);
-  //     expect(categoryServiceFindOneSpy).toHaveBeenCalledTimes(1);
-  //   });
-  //   it.todo('product quantity lack', async () => {
-  //     const categoryServiceFindOneSpy = jest
-  //       .spyOn(categoryService, 'findOne')
-  //       .mockRejectedValue(new CategoryNotFoundError());
+    it('cart not found', async () => {
+      const cartServiceFindOneByUserId = jest
+        .spyOn(cartService, 'findOneByUserId')
+        .mockRejectedValue(new CartNotFoundError());
 
-  //     try {
-  //       await productService.create(createProductDto);
-  //     } catch (err) {
-  //       expect(err).toBeInstanceOf(CategoryNotFoundError);
-  //       expect(err.message).toBe('category not found');
-  //       expect(err.status).toBe(400);
-  //     }
+      try {
+        await cartItemService.findAll(userId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(CartNotFoundError);
+        expect(err.message).toBe('cart not found');
+        expect(err.status).toBe(400);
+      }
 
-  //     expect(categoryServiceFindOneSpy).toHaveBeenCalledWith(categoryId);
-  //     expect(categoryServiceFindOneSpy).toHaveBeenCalledTimes(1);
-  //   });
-  // });
+      expect(cartServiceFindOneByUserId).toHaveBeenCalledWith(userId);
+      expect(cartServiceFindOneByUserId).toHaveBeenCalledTimes(1);
+    });
+  });
 
-  // describe('findAll', () => {
-  //   it.todo('success', async () => {
-  //     const productRepositoryFindSpy = jest
-  //       .spyOn(productRepository, 'find')
-  //       .mockResolvedValue(savedProducts);
+  describe('findOne', () => {
+    it('success', async () => {
+      const cartItemRepositoryFindOneSpy = jest
+        .spyOn(cartItemRepository, 'findOne')
+        .mockResolvedValue(savedCartItem);
 
-  //     const result = await productService.findAll();
+      const result = await cartItemService.findOne(cartItemId);
 
-  //     expect(productRepositoryFindSpy).toHaveBeenCalledWith();
-  //     expect(productRepositoryFindSpy).toHaveBeenCalledTimes(1);
-  //     expect(result).toStrictEqual(savedProducts);
-  //   });
-  //   it.todo('cart not found', async () => {
-  //     const categoryServiceFindOneSpy = jest
-  //       .spyOn(categoryService, 'findOne')
-  //       .mockRejectedValue(new CategoryNotFoundError());
+      expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledWith({
+        id: cartItemId,
+      });
+      expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
+      expect(result).toStrictEqual(savedCartItem);
+    });
 
-  //     try {
-  //       await productService.create(createProductDto);
-  //     } catch (err) {
-  //       expect(err).toBeInstanceOf(CategoryNotFoundError);
-  //       expect(err.message).toBe('category not found');
-  //       expect(err.status).toBe(400);
-  //     }
+    it('cart item not found', async () => {
+      const cartItemRepositoryFindOneSpy = jest
+        .spyOn(cartItemRepository, 'findOne')
+        .mockResolvedValue(undefined);
 
-  //     expect(categoryServiceFindOneSpy).toHaveBeenCalledWith(categoryId);
-  //     expect(categoryServiceFindOneSpy).toHaveBeenCalledTimes(1);
-  //   });
-  // });
+      try {
+        await cartItemService.findOne(cartItemId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(CartItemNotFoundError);
+        expect(err.message).toBe('cart item not found');
+        expect(err.status).toBe(400);
+      }
 
-  // describe('findOne', () => {
-  //   it.todo('success', async () => {
-  //     const findParam = {
-  //       where: { id: productId },
-  //     };
+      expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledWith({
+        id: cartItemId,
+      });
+      expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
+    });
+  });
 
-  //     const productRepositoryFindOneSpy = jest
-  //       .spyOn(productRepository, 'findOne')
-  //       .mockResolvedValue(savedProduct);
+  describe('update', () => {
+    it('success', async () => {
+      const cartItemRepositoryFindOneSpy = jest
+        .spyOn(cartItemRepository, 'findOne')
+        .mockResolvedValueOnce(savedCartItem)
+        .mockResolvedValueOnce(updatedCartItem);
 
-  //     const result = await productService.findOne(productId);
+      const productServiceFindOneSpy = jest
+        .spyOn(productService, 'findOne')
+        .mockResolvedValue(foundEnoughProduct);
 
-  //     expect(productRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
-  //     expect(productRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
-  //     expect(result).toStrictEqual(savedProduct);
-  //   });
-  //   it.todo('cart item not found', async () => {
-  //     const findParam = {
-  //       where: { id: productId },
-  //     };
+      const cartItemRepositoryUpdateSpy = jest
+        .spyOn(cartItemRepository, 'update')
+        .mockResolvedValue(updateCartResultSuccess);
 
-  //     const productRepositoryFindOneSpy = jest
-  //       .spyOn(productRepository, 'findOne')
-  //       .mockResolvedValue(null);
+      const cartItemRepositoryFindSpy = jest
+        .spyOn(cartItemRepository, 'find')
+        .mockResolvedValue(savedCartItems);
 
-  //     try {
-  //       await productService.findOne(productId);
-  //     } catch (err) {
-  //       expect(err).toBeInstanceOf(ProductNotFoundError);
-  //       expect(err.message).toBe('product not found');
-  //       expect(err.status).toBe(400);
-  //     }
+      const cartServiceUpdateSpy = jest
+        .spyOn(cartService, 'update')
+        .mockResolvedValue(updateCartResultSuccess);
 
-  //     expect(productRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
-  //     expect(productRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
-  //   });
-  // });
+      const result = await cartItemService.update(
+        cartItemId,
+        updateCartItemDto,
+      );
 
-  // describe('update', () => {
-  //   it.todo('success', async () => {
-  //     const findParam = {
-  //       where: { id: productId },
-  //     };
+      expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledWith({
+        id: cartItemId,
+      });
+      expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledTimes(2);
+      expect(productServiceFindOneSpy).toHaveBeenCalledWith(productId);
+      expect(productServiceFindOneSpy).toHaveBeenCalledTimes(2);
+      expect(cartItemRepositoryUpdateSpy).toHaveBeenCalledWith(cartItemId, {
+        quantity: updatedQuantity,
+      });
+      expect(cartItemRepositoryUpdateSpy).toHaveBeenCalledTimes(1);
+      expect(cartItemRepositoryFindSpy).toHaveBeenCalledWith({
+        cartId: cartId,
+      });
+      expect(cartItemRepositoryFindSpy).toHaveBeenCalledTimes(1);
+      expect(cartServiceUpdateSpy).toHaveBeenCalledWith(cartId, {
+        total: updatedTotal,
+      });
+      expect(cartServiceUpdateSpy).toHaveBeenCalledTimes(1);
+      expect(result).toStrictEqual(updatedCartItem);
+    });
 
-  //     const productRepositoryFindOneSpy = jest
-  //       .spyOn(productRepository, 'findOne')
-  //       .mockResolvedValueOnce(savedProduct)
-  //       .mockResolvedValueOnce(updatedProduct);
+    it('cart item not found', async () => {
+      const cartItemRepositoryFindOneSpy = jest
+        .spyOn(cartItemRepository, 'findOne')
+        .mockResolvedValueOnce(undefined);
 
-  //     const categoryServiceFindOneSpy = jest
-  //       .spyOn(categoryService, 'findOne')
-  //       .mockResolvedValue({
-  //         id: changedCategoryId,
-  //         ...foundCategoryId,
-  //       });
+      try {
+        await cartItemService.update(cartItemId, updateCartItemDto);
+      } catch (err) {
+        expect(err).toBeInstanceOf(CartItemNotFoundError);
+        expect(err.message).toBe('cart item not found');
+        expect(err.status).toBe(400);
+      }
 
-  //     const productRepositoryUpdateSpy = jest
-  //       .spyOn(productRepository, 'update')
-  //       .mockResolvedValue(updateResultSuccess);
+      expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledWith({
+        id: cartItemId,
+      });
+      expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
+    });
 
-  //     const result = await productService.update(productId, updateProductDto);
+    it('product not found', async () => {
+      const cartItemRepositoryFindOneSpy = jest
+        .spyOn(cartItemRepository, 'findOne')
+        .mockResolvedValueOnce(savedCartItem)
+        .mockResolvedValueOnce(updatedCartItem);
 
-  //     expect(categoryServiceFindOneSpy).toHaveBeenCalledWith(changedCategoryId);
-  //     expect(categoryServiceFindOneSpy).toHaveBeenCalledTimes(1);
-  //     expect(productRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
-  //     expect(productRepositoryFindOneSpy).toHaveBeenCalledTimes(2);
-  //     expect(productRepositoryUpdateSpy).toHaveBeenCalledWith(
-  //       productId,
-  //       updateProductDto,
-  //     );
-  //     expect(productRepositoryUpdateSpy).toHaveBeenCalledTimes(1);
-  //     expect(result).toStrictEqual(updatedProduct);
-  //   });
-  //   it.todo('cart item not found', async () => {
-  //     const findParam = {
-  //       where: { id: productId },
-  //     };
+      const productServiceFindOneSpy = jest
+        .spyOn(productService, 'findOne')
+        .mockRejectedValue(new ProductNotFoundError());
 
-  //     const productRepositoryFindOneSpy = jest
-  //       .spyOn(productRepository, 'findOne')
-  //       .mockResolvedValue(null);
+      try {
+        await cartItemService.update(cartItemId, updateCartItemDto);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ProductNotFoundError);
+        expect(err.message).toBe('product not found');
+        expect(err.status).toBe(400);
+      }
 
-  //     try {
-  //       await productService.update(productId, updateProductDto);
-  //     } catch (err) {
-  //       expect(err).toBeInstanceOf(ProductNotFoundError);
-  //       expect(err.message).toBe('product not found');
-  //       expect(err.status).toBe(400);
-  //     }
+      expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledWith({
+        id: cartItemId,
+      });
+      expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
+      expect(productServiceFindOneSpy).toHaveBeenCalledWith(productId);
+      expect(productServiceFindOneSpy).toHaveBeenCalledTimes(1);
+    });
 
-  //     expect(productRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
-  //     expect(productRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
-  //   });
-  //   it.todo('product not found', async () => {
-  //     const findParam = {
-  //       where: { id: productId },
-  //     };
+    it('product quantity lack', async () => {
+      const cartItemRepositoryFindOneSpy = jest
+        .spyOn(cartItemRepository, 'findOne')
+        .mockResolvedValueOnce(savedCartItem)
+        .mockResolvedValueOnce(updatedCartItem);
 
-  //     const productRepositoryFindOneSpy = jest
-  //       .spyOn(productRepository, 'findOne')
-  //       .mockResolvedValue(null);
+      const productServiceFindOneSpy = jest
+        .spyOn(productService, 'findOne')
+        .mockResolvedValue(foundLackProduct);
 
-  //     try {
-  //       await productService.update(productId, updateProductDto);
-  //     } catch (err) {
-  //       expect(err).toBeInstanceOf(ProductNotFoundError);
-  //       expect(err.message).toBe('product not found');
-  //       expect(err.status).toBe(400);
-  //     }
+      try {
+        await cartItemService.update(cartItemId, updateCartItemDto);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ProductQuantityLackError);
+        expect(err.message).toBe('product quantity lack');
+        expect(err.status).toBe(400);
+      }
 
-  //     expect(productRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
-  //     expect(productRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
-  //   });
-  //   it.todo('product quantity lack', async () => {
-  //     const findParam = {
-  //       where: { id: productId },
-  //     };
+      expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledWith({
+        id: cartItemId,
+      });
+      expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
+      expect(productServiceFindOneSpy).toHaveBeenCalledWith(productId);
+      expect(productServiceFindOneSpy).toHaveBeenCalledTimes(1);
+    });
+  });
 
-  //     const productRepositoryFindOneSpy = jest
-  //       .spyOn(productRepository, 'findOne')
-  //       .mockResolvedValue(null);
+  describe('remove', () => {
+    it('success', async () => {
+      const cartItemRepositoryFindOneSpy = jest
+        .spyOn(cartItemRepository, 'findOne')
+        .mockResolvedValue(savedCartItem);
 
-  //     try {
-  //       await productService.update(productId, updateProductDto);
-  //     } catch (err) {
-  //       expect(err).toBeInstanceOf(ProductNotFoundError);
-  //       expect(err.message).toBe('product not found');
-  //       expect(err.status).toBe(400);
-  //     }
+      const cartItemRepositorySoftDeleteSpy = jest
+        .spyOn(cartItemRepository, 'softRemove')
+        .mockResolvedValue(deletedCartItem);
 
-  //     expect(productRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
-  //     expect(productRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
-  //   });
-  // });
+      const result = await cartItemService.remove(cartItemId);
 
-  // describe('remove', () => {
-  //   it.todo('success', async () => {
-  //     const findParam = {
-  //       where: { id: productId },
-  //     };
+      expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledWith({
+        id: cartItemId,
+      });
+      expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
+      expect(cartItemRepositorySoftDeleteSpy).toHaveBeenCalledWith(
+        savedCartItem,
+      );
+      expect(cartItemRepositorySoftDeleteSpy).toHaveBeenCalledTimes(1);
+      expect(result).toStrictEqual(deletedCartItem);
+    });
 
-  //     const productRepositoryFindOneSpy = jest
-  //       .spyOn(productRepository, 'findOne')
-  //       .mockResolvedValue(savedProduct);
+    it('cart item not found', async () => {
+      const cartItemRepositoryFindOneSpy = jest
+        .spyOn(cartItemRepository, 'findOne')
+        .mockResolvedValue(undefined);
 
-  //     const productRepositorySoftDeleteSpy = jest
-  //       .spyOn(productRepository, 'softRemove')
-  //       .mockResolvedValue(deletedProduct);
+      try {
+        await cartItemService.remove(cartItemId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(CartItemNotFoundError);
+        expect(err.message).toBe('cart item not found');
+        expect(err.status).toBe(400);
+      }
 
-  //     const result = await productService.remove(productId);
+      expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledWith({
+        id: cartItemId,
+      });
+      expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
+    });
+  });
 
-  //     expect(productRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
-  //     expect(productRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
-  //     expect(productRepositorySoftDeleteSpy).toHaveBeenCalledWith(savedProduct);
-  //     expect(productRepositorySoftDeleteSpy).toHaveBeenCalledTimes(1);
-  //     expect(result).toStrictEqual(deletedProduct);
-  //   });
-  //   it.todo('cart item not found', async () => {
-  //     const findParam = {
-  //       where: { id: productId },
-  //     };
+  describe('calculateTotalPrice', () => {
+    it('success', async () => {
+      const cartItemRepositoryFindSpy = jest
+        .spyOn(cartItemRepository, 'find')
+        .mockResolvedValue(savedCartItems);
 
-  //     const productRepositoryFindOneSpy = jest
-  //       .spyOn(productRepository, 'findOne')
-  //       .mockResolvedValue(null);
+      const productServiceFindOneSpy = jest
+        .spyOn(productService, 'findOne')
+        .mockResolvedValue(foundEnoughProduct);
 
-  //     try {
-  //       await productService.remove(productId);
-  //     } catch (err) {
-  //       expect(err).toBeInstanceOf(ProductNotFoundError);
-  //       expect(err.message).toBe('product not found');
-  //       expect(err.status).toBe(400);
-  //     }
+      const cartServiceUpdateSpy = jest
+        .spyOn(cartService, 'update')
+        .mockResolvedValue(updateCartResultSuccess);
 
-  //     expect(productRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
-  //     expect(productRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
-  //   });
-  // });
+      const result = await cartItemService.calculateTotalPrice(cartId);
 
-  // describe('calculateTotalPrice', () => {
-  //   it.todo('success');
-  //   it.todo('cart not found');
-  // });
+      expect(cartItemRepositoryFindSpy).toHaveBeenCalledWith({
+        cartId: cartId,
+      });
+      expect(cartItemRepositoryFindSpy).toHaveBeenCalledTimes(1);
+      expect(productServiceFindOneSpy).toHaveBeenCalledWith(productId);
+      expect(productServiceFindOneSpy).toHaveBeenCalledTimes(1);
+      expect(cartServiceUpdateSpy).toHaveBeenCalledWith(cartId, {
+        total: updatedTotal,
+      });
+      expect(cartServiceUpdateSpy).toHaveBeenCalledTimes(1);
+      expect(result).toStrictEqual(updateCartResultSuccess);
+    });
 
-  // describe('checkProductQuantity', () => {
-  //   it.todo('success');
-  //   it.todo('product not found');
-  //   it.todo('product quantity lack');
-  // });
+    it('no cart items', async () => {
+      const cartItemRepositoryFindSpy = jest
+        .spyOn(cartItemRepository, 'find')
+        .mockResolvedValue([]);
+
+      const cartServiceUpdateSpy = jest
+        .spyOn(cartService, 'update')
+        .mockResolvedValue(updateCartResultSuccess);
+
+      const result = await cartItemService.calculateTotalPrice(cartId);
+
+      expect(cartItemRepositoryFindSpy).toHaveBeenCalledWith({
+        cartId: cartId,
+      });
+      expect(cartItemRepositoryFindSpy).toHaveBeenCalledTimes(1);
+      expect(cartServiceUpdateSpy).toHaveBeenCalledWith(cartId, {
+        total: 0,
+      });
+      expect(cartServiceUpdateSpy).toHaveBeenCalledTimes(1);
+      expect(result).toStrictEqual(updateCartResultSuccess);
+    });
+  });
+
+  describe('checkProductQuantity', () => {
+    it('success', async () => {
+      const productServiceFindOneSpy = jest
+        .spyOn(productService, 'findOne')
+        .mockResolvedValue(foundEnoughProduct);
+
+      const result = await cartItemService.checkProductQuantity(
+        productId,
+        cartItemQuantity,
+      );
+
+      expect(productServiceFindOneSpy).toHaveBeenCalledWith(productId);
+      expect(productServiceFindOneSpy).toHaveBeenCalledTimes(1);
+      expect(result).toStrictEqual(foundEnoughProduct);
+    });
+
+    it('product not found', async () => {
+      const productServiceFindOneSpy = jest
+        .spyOn(productService, 'findOne')
+        .mockRejectedValue(new ProductNotFoundError());
+
+      try {
+        await cartItemService.checkProductQuantity(productId, cartItemQuantity);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ProductNotFoundError);
+        expect(err.message).toBe('product not found');
+        expect(err.status).toBe(400);
+      }
+
+      expect(productServiceFindOneSpy).toHaveBeenCalledWith(productId);
+      expect(productServiceFindOneSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('product quantity lack', async () => {
+      const productServiceFindOneSpy = jest
+        .spyOn(productService, 'findOne')
+        .mockResolvedValue(foundLackProduct);
+
+      try {
+        await cartItemService.checkProductQuantity(productId, cartItemQuantity);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ProductQuantityLackError);
+        expect(err.message).toBe('product quantity lack');
+        expect(err.status).toBe(400);
+      }
+
+      expect(productServiceFindOneSpy).toHaveBeenCalledWith(productId);
+      expect(productServiceFindOneSpy).toHaveBeenCalledTimes(1);
+    });
+  });
 });

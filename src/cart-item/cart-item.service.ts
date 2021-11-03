@@ -68,11 +68,7 @@ export class CartItemService {
     return result;
   }
 
-  async update(
-    userId: number,
-    id: number,
-    updateCartItemDto: UpdateCartItemDto,
-  ) {
+  async update(id: number, updateCartItemDto: UpdateCartItemDto) {
     const validation_error = await validate(updateCartItemDto);
     if (validation_error.length > 0) {
       throw new HttpException(validation_error, HttpStatus.BAD_REQUEST);
@@ -88,7 +84,7 @@ export class CartItemService {
       quantity: quantity,
     });
 
-    await this.calculateTotalPrice(id);
+    await this.calculateTotalPrice(thisCartItem.cartId);
 
     const result = await this.findOne(id);
 

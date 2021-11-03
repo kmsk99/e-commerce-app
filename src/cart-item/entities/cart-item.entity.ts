@@ -1,15 +1,14 @@
-import { ProductEntity } from '@root/product/entities/product.entity';
-import { UserEntity } from '@root/user/entities/user.entity';
 import {
   CreateDateColumn,
   Entity,
-  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
   Column,
   UpdateDateColumn,
   DeleteDateColumn,
 } from 'typeorm';
+import { ProductEntity } from '@root/product/entities/product.entity';
+import { UserEntity } from '@root/user/entities/user.entity';
 
 @Entity('cart-item')
 export class CartItemEntity {

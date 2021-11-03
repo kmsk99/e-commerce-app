@@ -388,14 +388,14 @@ describe('AppController (e2e)', () => {
       name: faker.commerce.product(),
       categoryId: 1,
       price: faker.commerce.price(),
-      quantity: faker.datatype.number(),
+      quantity: 50,
     };
 
     const productB = {
       name: faker.commerce.product(),
       categoryId: 2,
       price: faker.commerce.price(),
-      quantity: faker.datatype.number(),
+      quantity: 10,
     };
 
     const productC = {
@@ -583,6 +583,12 @@ describe('AppController (e2e)', () => {
   });
 
   describe('/cart', () => {
+    describe('POST', () => {
+      it.todo('success add productA 40');
+      it.todo('failed add productA already exists');
+      it.todo('failed add productB 20');
+      it.todo('success add productB 5');
+    });
     describe('GET', () => {
       it('success', () => {
         return request(app.getHttpServer())
@@ -595,6 +601,7 @@ describe('AppController (e2e)', () => {
             expect(response.body).toHaveProperty('total', '0');
             expect(response.body).toHaveProperty('createdAt');
             expect(response.body).toHaveProperty('updatedAt');
+            expect(response.body).toHaveProperty('cartItems');
           })
           .expect(200);
       });
@@ -611,8 +618,19 @@ describe('AppController (e2e)', () => {
     });
 
     describe('/{cartId}', () => {
-      it.todo('POST');
-      it.todo('GET');
+      describe('GET', () => {
+        it.todo('success productA');
+        it.todo('success productB');
+        it.todo('failed not exist cartItemId');
+      });
+      describe('PATCH', () => {
+        it.todo('success productA change to 30');
+        it.todo('failt productB change to 20');
+      });
+      describe('DELETE', () => {
+        it.todo('success delete productB');
+        it.todo('failed not exist cartItemId');
+      });
     });
   });
 

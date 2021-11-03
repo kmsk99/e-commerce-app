@@ -128,6 +128,11 @@ describe('CartItemService', () => {
     ],
   };
 
+  const cartAndCartItems = {
+    cartItems: savedCartItems,
+    ...foundCart,
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -332,7 +337,7 @@ describe('CartItemService', () => {
         cartId: cartId,
       });
       expect(cartItemRepositoryFindSpy).toHaveBeenCalledTimes(1);
-      expect(result).toStrictEqual(savedCartItems);
+      expect(result).toStrictEqual(cartAndCartItems);
     });
 
     it('cart not found', async () => {

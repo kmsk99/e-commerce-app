@@ -53,8 +53,10 @@ export class CartItemService {
 
   async findAll(userId: number) {
     const thisCart = await this.cartService.findOneByUserId(userId);
-    const result = await this.cartItemRepository.find({ cartId: thisCart.id });
-
+    const cartItems = await this.cartItemRepository.find({
+      cartId: thisCart.id,
+    });
+    const result = { cartItems: cartItems, ...thisCart };
     return result;
   }
 

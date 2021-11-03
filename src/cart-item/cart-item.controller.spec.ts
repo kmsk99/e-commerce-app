@@ -5,6 +5,7 @@ import * as faker from 'faker';
 import { CreateCartItemDto } from './dto/create-cart-item.dto';
 import { CartItemEntity } from './entities/cart-item.entity';
 import { UpdateCartItemDto } from './dto/update-cart-item.dto';
+import { CartEntity } from '../cart/entities/cart.entity';
 
 describe('CartItemController', () => {
   let cartItemController: CartItemController;
@@ -65,6 +66,20 @@ describe('CartItemController', () => {
 
   const savedCartItems: CartItemEntity[] = [savedCartItem];
 
+  const foundCart: CartEntity = {
+    id: cartId,
+    userId: userId,
+    total: 0,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+    deletedAt: undefined,
+  };
+
+  const cartAndCartItems = {
+    cartItems: savedCartItems,
+    ...foundCart,
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [CartItemController],
@@ -113,13 +128,13 @@ describe('CartItemController', () => {
     it('GET', async () => {
       const cartItemServiceFindAllSpy = jest
         .spyOn(cartItemService, 'findAll')
-        .mockResolvedValue(savedCartItems);
+        .mockResolvedValue(cartAndCartItems);
 
       const result = await cartItemController.findAll(request);
 
       expect(cartItemServiceFindAllSpy).toHaveBeenCalledWith(userId);
       expect(cartItemServiceFindAllSpy).toBeCalledTimes(1);
-      expect(result).toBe(savedCartItems);
+      expect(result).toBe(cartAndCartItems);
     });
 
     describe('/:id', () => {

@@ -7,6 +7,8 @@ import { CartEntity } from './entities/cart.entity';
 import { UserNotFoundException } from '@root/user/exceptions/user-not-found.exception';
 import { UserService } from '@root/user/user.service';
 import { CartNotFoundError } from './exceptions/cart-not-found.exception';
+import { UpdateCartDto } from './dto/update-cart.dto';
+import { UpdateResult } from 'typeorm';
 
 describe('CartService', () => {
   let cartService: CartService;
@@ -17,10 +19,16 @@ describe('CartService', () => {
   const userId = faker.datatype.number();
   const createdAt = faker.date.recent();
   const updatedAt = faker.date.recent();
+  const updatedUpdatedAt = faker.date.recent();
   const deletedAt = faker.date.recent();
+  const updatedTotal = faker.datatype.float();
 
   const createCartDto: CreateCartDto = {
     userId: userId,
+  };
+
+  const updateCartDto: UpdateCartDto = {
+    total: updatedTotal,
   };
 
   const savedCart: CartEntity = {
@@ -47,6 +55,23 @@ describe('CartService', () => {
     id: userId,
     createdAt: faker.date.recent(),
     updatedAt: faker.date.recent(),
+  };
+
+  const updateCartResultSuccess: UpdateResult = {
+    generatedMaps: [
+      {
+        id: cartId,
+        createdAt: createdAt,
+        updatedAt: updatedUpdatedAt,
+      },
+    ],
+    raw: [
+      {
+        id: cartId,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
+      },
+    ],
   };
 
   beforeEach(async () => {
@@ -190,6 +215,54 @@ describe('CartService', () => {
       expect(cartRepositorySaveSpy).toHaveBeenCalledWith(createCartDto);
       expect(cartRepositorySaveSpy).toHaveBeenCalledTimes(1);
       expect(result).toStrictEqual(savedCart);
+    });
+  });
+
+  describe('update', () => {
+    it('success', async () => {
+      const findParam = {
+        where: { id: cartId },
+      };
+
+      const cartRepositoryFindOneSpy = jest
+        .spyOn(cartRepository, 'findOne')
+        .mockResolvedValue(savedCart);
+
+      const cartRepositoryUpdateSpy = jest
+        .spyOn(cartRepository, 'update')
+        .mockResolvedValue(updateCartResultSuccess);
+
+      const result = await cartService.update(cartId, updateCartDto);
+
+      expect(cartRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
+      expect(cartRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
+      expect(cartRepositoryUpdateSpy).toHaveBeenCalledWith(
+        cartId,
+        updateCartDto,
+      );
+      expect(cartRepositoryUpdateSpy).toHaveBeenCalledTimes(1);
+      expect(result).toStrictEqual(updateCartResultSuccess);
+    });
+
+    it('cart not found', async () => {
+      const findParam = {
+        where: { id: cartId },
+      };
+
+      const cartRepositoryFindOneSpy = jest
+        .spyOn(cartRepository, 'findOne')
+        .mockResolvedValue(null);
+
+      try {
+        await cartService.update(cartId, updateCartDto);
+      } catch (err) {
+        expect(err).toBeInstanceOf(CartNotFoundError);
+        expect(err.message).toBe('cart not found');
+        expect(err.status).toBe(400);
+      }
+
+      expect(cartRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
+      expect(cartRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
     });
   });
 

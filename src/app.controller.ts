@@ -21,17 +21,18 @@ export class AppController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(@Request() req) {
-    return this.authService.login(req.user);
+    return await this.authService.login(req.user);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('users')
-  getUsers(@Request() req) {
-    return this.userService.findOne(req.user.username);
+  async getUser(@Request() req) {
+    return await this.userService.findOne(req.user.username);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('users/:userId')
-  getUserId(@Param('userId') userId: number) {
-    return this.userService.findByUserId(userId);
+  async getUserId(@Param('userId') userId: number) {
+    return await this.userService.findByUserId(userId);
   }
 }

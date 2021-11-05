@@ -4,23 +4,33 @@ import { UpdatePaymentDto } from './dto/update-payment.dto';
 
 @Injectable()
 export class PaymentService {
-  create(createPaymentDto: CreatePaymentDto) {
-    return 'This action adds a new payment';
+  create(userId: number, createPaymentDto: CreatePaymentDto) {
+    return new Promise(() => {
+      return '';
+    });
   }
 
-  findAll() {
-    return `This action returns all payment`;
+  findAll(userId: number) {
+    return new Promise(() => {
+      return '';
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} payment`;
+  findOne(userId: number) {
+    return new Promise(() => {
+      return '';
+    });
   }
 
-  update(id: number, updatePaymentDto: UpdatePaymentDto) {
-    return `This action updates a #${id} payment`;
+  update(userId: number, updatePaymentDto: UpdatePaymentDto) {
+    return new Promise(() => {
+      return '';
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} payment`;
+  remove(userId: number) {
+    return new Promise(() => {
+      return '';
+    });
   }
 }

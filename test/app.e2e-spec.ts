@@ -839,21 +839,144 @@ describe('AppController (e2e)', () => {
   });
 
   describe('/payment', () => {
+    const provider = faker.finance.creditCardNumber();
+    const updatedProvider = faker.finance.creditCardNumber();
+
     describe('POST', () => {
-      it.todo('userA success');
-      it.todo('userB success');
+      it('userA success', () => {
+        return request(app.getHttpServer())
+          .post('/payment')
+          .send({ provider: provider })
+          .set('Authorization', `Bearer ${userAToken}`)
+          .expect(201)
+          .expect((response: request.Response) => {
+            expect(response.body).toHaveProperty('id', 1);
+            expect(response.body).toHaveProperty('userId', 1);
+            expect(response.body).toHaveProperty('provider', provider);
+            expect(response.body).toHaveProperty('status', true);
+            expect(response.body).toHaveProperty('createdAt');
+            expect(response.body).toHaveProperty('updatedAt');
+            expect(response.body).toHaveProperty('deletedAt');
+          });
+      });
+
+      it('userB success', () => {
+        return request(app.getHttpServer())
+          .post('/payment')
+          .send({ provider: provider })
+          .set('Authorization', `Bearer ${userBToken}`)
+          .expect(201)
+          .expect((response: request.Response) => {
+            expect(response.body).toHaveProperty('id', 2);
+            expect(response.body).toHaveProperty('userId', 2);
+            expect(response.body).toHaveProperty('provider', provider);
+            expect(response.body).toHaveProperty('status', true);
+            expect(response.body).toHaveProperty('createdAt');
+            expect(response.body).toHaveProperty('updatedAt');
+            expect(response.body).toHaveProperty('deletedAt');
+          });
+      });
+
+      it('userB already exists', () => {
+        return request(app.getHttpServer())
+          .post('/payment')
+          .send({ provider: provider })
+          .set('Authorization', `Bearer ${userBToken}`)
+          .expect({
+            statusCode: 400,
+            message: 'payment already exists',
+            error: 'Bad Request',
+          });
+      });
     });
+
     describe('DELETE', () => {
-      it.todo('userB success');
-      it.todo('userB fails');
+      it('userB success', () => {
+        return request(app.getHttpServer())
+          .delete('/payment')
+          .set('Authorization', `Bearer ${userBToken}`)
+          .expect(201)
+          .expect((response: request.Response) => {
+            expect(response.body).toHaveProperty('id', 2);
+            expect(response.body).toHaveProperty('userId', 2);
+            expect(response.body).toHaveProperty('provider', provider);
+            expect(response.body).toHaveProperty('status', true);
+            expect(response.body).toHaveProperty('createdAt');
+            expect(response.body).toHaveProperty('updatedAt');
+            expect(response.body).toHaveProperty('deletedAt');
+          });
+      });
+
+      it('userB fails', () => {
+        return request(app.getHttpServer())
+          .delete('/payment')
+          .set('Authorization', `Bearer ${userBToken}`)
+          .expect({
+            statusCode: 400,
+            message: 'payment not found',
+            error: 'Bad Request',
+          });
+      });
     });
+
     describe('GET', () => {
-      it.todo('userA success');
-      it.todo('userB fails');
+      it('userA success', () => {
+        return request(app.getHttpServer())
+          .get('/payment')
+          .set('Authorization', `Bearer ${userAToken}`)
+          .expect(200)
+          .expect((response: request.Response) => {
+            expect(response.body).toHaveProperty('id', 1);
+            expect(response.body).toHaveProperty('userId', 1);
+            expect(response.body).toHaveProperty('provider', provider);
+            expect(response.body).toHaveProperty('status', true);
+            expect(response.body).toHaveProperty('createdAt');
+            expect(response.body).toHaveProperty('updatedAt');
+            expect(response.body).toHaveProperty('deletedAt');
+          });
+      });
+
+      it('userB fails', () => {
+        return request(app.getHttpServer())
+          .get('/payment')
+          .set('Authorization', `Bearer ${userBToken}`)
+          .expect({
+            statusCode: 400,
+            message: 'payment not found',
+            error: 'Bad Request',
+          });
+      });
     });
+
     describe('PATCH', () => {
-      it.todo('userA success');
-      it.todo('userB fails');
+      it('userA success', () => {
+        return request(app.getHttpServer())
+          .patch('/payment')
+          .send({ provider: updatedProvider })
+          .set('Authorization', `Bearer ${userAToken}`)
+          .expect(201)
+          .expect((response: request.Response) => {
+            expect(response.body).toHaveProperty('id', 1);
+            expect(response.body).toHaveProperty('userId', 1);
+            expect(response.body).toHaveProperty('provider', updatedProvider);
+            expect(response.body).toHaveProperty('status', true);
+            expect(response.body).toHaveProperty('createdAt');
+            expect(response.body).toHaveProperty('updatedAt');
+            expect(response.body).toHaveProperty('deletedAt');
+          });
+      });
+
+      it('userB fails', () => {
+        return request(app.getHttpServer())
+          .patch('/payment')
+          .send({ provider: updatedProvider })
+          .set('Authorization', `Bearer ${userBToken}`)
+          .expect({
+            statusCode: 400,
+            message: 'payment not found',
+            error: 'Bad Request',
+          });
+      });
     });
   });
 

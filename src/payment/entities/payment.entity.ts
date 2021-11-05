@@ -4,6 +4,8 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -14,7 +16,7 @@ export class PaymentEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @OneToOne(() => UserEntity, (users) => users.id)
+  @ManyToOne(() => UserEntity, (users) => users.id)
   @Column({ name: 'user_id' })
   userId: number;
 

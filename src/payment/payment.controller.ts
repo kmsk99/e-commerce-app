@@ -7,6 +7,7 @@ import {
   Delete,
   UseGuards,
   Request,
+  HttpCode,
 } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
@@ -19,6 +20,7 @@ export class PaymentController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
+  @HttpCode(201)
   create(@Request() req, @Body() createPaymentDto: CreatePaymentDto) {
     return this.paymentService.create(req.user.id, createPaymentDto);
   }
@@ -31,12 +33,14 @@ export class PaymentController {
 
   @UseGuards(JwtAuthGuard)
   @Patch()
+  @HttpCode(201)
   update(@Request() req, @Body() updatePaymentDto: UpdatePaymentDto) {
     return this.paymentService.update(req.user.id, updatePaymentDto);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete()
+  @HttpCode(201)
   remove(@Request() req) {
     return this.paymentService.remove(req.user.id);
   }

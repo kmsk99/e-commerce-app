@@ -584,11 +584,65 @@ describe('AppController (e2e)', () => {
 
   describe('/cart', () => {
     describe('POST', () => {
-      it.todo('success add productA 40');
-      it.todo('failed add productA already exists');
-      it.todo('failed add productB 20');
-      it.todo('success add productB 5');
+      it('success add productA 40', () => {
+        return request(app.getHttpServer())
+          .post('/cart')
+          .send({ productId: 1, quantity: 40 })
+          .set('Authorization', `Bearer ${userAToken}`)
+          .expect(201)
+          .expect((response: request.Response) => {
+            expect(response.body).toHaveProperty('id', 1);
+            expect(response.body).toHaveProperty('productId', 1);
+            expect(response.body).toHaveProperty('cartId', 1);
+            expect(response.body).toHaveProperty('quantity', 40);
+            expect(response.body).toHaveProperty('createdAt');
+            expect(response.body).toHaveProperty('updatedAt');
+            expect(response.body).toHaveProperty('deletedAt');
+          });
+      });
+
+      it('failed add productA already exists', () => {
+        return request(app.getHttpServer())
+          .post('/cart')
+          .send({ productId: 1, quantity: 40 })
+          .set('Authorization', `Bearer ${userAToken}`)
+          .expect({
+            statusCode: 400,
+            message: 'product already exists in cart',
+            error: 'Bad Request',
+          });
+      });
+
+      it('failed add productB 20', () => {
+        return request(app.getHttpServer())
+          .post('/cart')
+          .send({ productId: 2, quantity: 20 })
+          .set('Authorization', `Bearer ${userAToken}`)
+          .expect({
+            statusCode: 400,
+            message: 'product quantity lack',
+            error: 'Bad Request',
+          });
+      });
+
+      it('success add productB 5', () => {
+        return request(app.getHttpServer())
+          .post('/cart')
+          .send({ productId: 2, quantity: 5 })
+          .set('Authorization', `Bearer ${userAToken}`)
+          .expect(201)
+          .expect((response: request.Response) => {
+            expect(response.body).toHaveProperty('id', 2);
+            expect(response.body).toHaveProperty('productId', 2);
+            expect(response.body).toHaveProperty('cartId', 1);
+            expect(response.body).toHaveProperty('quantity', 5);
+            expect(response.body).toHaveProperty('createdAt');
+            expect(response.body).toHaveProperty('updatedAt');
+            expect(response.body).toHaveProperty('deletedAt');
+          });
+      });
     });
+
     describe('GET', () => {
       it('success', () => {
         return request(app.getHttpServer())
@@ -598,7 +652,7 @@ describe('AppController (e2e)', () => {
             expect(response.body).toHaveProperty('userId', 1);
             expect(response.body).toHaveProperty('deletedAt', null);
             expect(response.body).toHaveProperty('id', 1);
-            expect(response.body).toHaveProperty('total', '0');
+            expect(response.body).toHaveProperty('total');
             expect(response.body).toHaveProperty('createdAt');
             expect(response.body).toHaveProperty('updatedAt');
             expect(response.body).toHaveProperty('cartItems');
@@ -619,17 +673,108 @@ describe('AppController (e2e)', () => {
 
     describe('/{cartId}', () => {
       describe('GET', () => {
-        it.todo('success productA');
-        it.todo('success productB');
-        it.todo('failed not exist cartItemId');
+        it('success productA', () => {
+          return request(app.getHttpServer())
+            .get('/cart/1')
+            .set('Authorization', `Bearer ${userAToken}`)
+            .expect(200)
+            .expect((response: request.Response) => {
+              expect(response.body).toHaveProperty('id', 1);
+              expect(response.body).toHaveProperty('productId', 1);
+              expect(response.body).toHaveProperty('cartId', 1);
+              expect(response.body).toHaveProperty('quantity', 40);
+              expect(response.body).toHaveProperty('createdAt');
+              expect(response.body).toHaveProperty('updatedAt');
+              expect(response.body).toHaveProperty('deletedAt');
+            });
+        });
+
+        it('success productB', () => {
+          return request(app.getHttpServer())
+            .get('/cart/2')
+            .set('Authorization', `Bearer ${userAToken}`)
+            .expect(200)
+            .expect((response: request.Response) => {
+              expect(response.body).toHaveProperty('id', 2);
+              expect(response.body).toHaveProperty('productId', 2);
+              expect(response.body).toHaveProperty('cartId', 1);
+              expect(response.body).toHaveProperty('quantity', 5);
+              expect(response.body).toHaveProperty('createdAt');
+              expect(response.body).toHaveProperty('updatedAt');
+              expect(response.body).toHaveProperty('deletedAt');
+            });
+        });
+
+        it('failed not exist cartItemId', () => {
+          return request(app.getHttpServer())
+            .get('/cart/3')
+            .set('Authorization', `Bearer ${userAToken}`)
+            .expect({
+              statusCode: 400,
+              message: 'cart item not found',
+              error: 'Bad Request',
+            });
+        });
       });
+
       describe('PATCH', () => {
-        it.todo('success productA change to 30');
-        it.todo('failt productB change to 20');
+        it('success productA change to 30', () => {
+          return request(app.getHttpServer())
+            .patch('/cart/1')
+            .send({ quantity: 30 })
+            .set('Authorization', `Bearer ${userAToken}`)
+            .expect(201)
+            .expect((response: request.Response) => {
+              expect(response.body).toHaveProperty('id', 1);
+              expect(response.body).toHaveProperty('productId', 1);
+              expect(response.body).toHaveProperty('cartId', 1);
+              expect(response.body).toHaveProperty('quantity', 30);
+              expect(response.body).toHaveProperty('createdAt');
+              expect(response.body).toHaveProperty('updatedAt');
+              expect(response.body).toHaveProperty('deletedAt');
+            });
+        });
+
+        it('failt productB change to 20', () => {
+          return request(app.getHttpServer())
+            .patch('/cart/2')
+            .send({ quantity: 20 })
+            .set('Authorization', `Bearer ${userAToken}`)
+            .expect({
+              statusCode: 400,
+              message: 'product quantity lack',
+              error: 'Bad Request',
+            });
+        });
       });
+
       describe('DELETE', () => {
-        it.todo('success delete productB');
-        it.todo('failed not exist cartItemId');
+        it('success delete productB', () => {
+          return request(app.getHttpServer())
+            .delete('/cart/2')
+            .set('Authorization', `Bearer ${userAToken}`)
+            .expect(200)
+            .expect((response: request.Response) => {
+              expect(response.body).toHaveProperty('id', 2);
+              expect(response.body).toHaveProperty('productId', 2);
+              expect(response.body).toHaveProperty('cartId', 1);
+              expect(response.body).toHaveProperty('quantity', 5);
+              expect(response.body).toHaveProperty('createdAt');
+              expect(response.body).toHaveProperty('updatedAt');
+              expect(response.body).toHaveProperty('deletedAt');
+            });
+        });
+
+        it('failed not exist cartItemId', () => {
+          return request(app.getHttpServer())
+            .delete('/cart/3')
+            .set('Authorization', `Bearer ${userAToken}`)
+            .expect({
+              statusCode: 400,
+              message: 'cart item not found',
+              error: 'Bad Request',
+            });
+        });
       });
     });
   });

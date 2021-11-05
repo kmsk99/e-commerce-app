@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Request,
+  HttpCode,
 } from '@nestjs/common';
 import { CartItemService } from './cart-item.service';
 import { CreateCartItemDto } from './dto/create-cart-item.dto';
@@ -38,6 +39,7 @@ export class CartItemController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
+  @HttpCode(201)
   update(
     @Param('id') id: string,
     @Body() updateCartItemDto: UpdateCartItemDto,

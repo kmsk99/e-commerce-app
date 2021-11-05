@@ -1,4 +1,9 @@
-import { Injectable, HttpStatus, HttpException } from '@nestjs/common';
+import {
+  Injectable,
+  HttpStatus,
+  HttpException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CartService } from '@root/cart/cart.service';
 import { ProductService } from '@root/product/product.service';
 import { validate } from 'class-validator';
@@ -60,17 +65,27 @@ export class CartItemService {
     return result;
   }
 
-  async findOne(id: number) {
+  async findOne(userId: number, id: number) {
     const result = await this.cartItemRepository.findOne({ id: id });
 
     if (!result) {
       throw new CartItemNotFoundError();
     }
 
+    const thisCart = await this.cartService.findOneByUserId(userId);
+
+    if (thisCart.id !== result.cartId) {
+      throw new UnauthorizedException();
+    }
+
     return result;
   }
 
-  async update(id: number, updateCartItemDto: UpdateCartItemDto) {
+  async update(
+    userId: number,
+    id: number,
+    updateCartItemDto: UpdateCartItemDto,
+  ) {
     const validation_error = await validate(updateCartItemDto);
     if (validation_error.length > 0) {
       throw new HttpException(validation_error, HttpStatus.BAD_REQUEST);
@@ -78,7 +93,7 @@ export class CartItemService {
 
     const { quantity } = updateCartItemDto;
 
-    const thisCartItem = await this.findOne(id);
+    const thisCartItem = await this.findOne(userId, id);
 
     await this.checkProductQuantity(thisCartItem.productId, quantity);
 
@@ -88,13 +103,13 @@ export class CartItemService {
 
     await this.calculateTotalPrice(thisCartItem.cartId);
 
-    const result = await this.findOne(id);
+    const result = await this.findOne(userId, id);
 
     return result;
   }
 
-  async remove(id: number) {
-    const thisCartItem = await this.findOne(id);
+  async remove(userId: number, id: number) {
+    const thisCartItem = await this.findOne(userId, id);
     const result = await this.cartItemRepository.softRemove(thisCartItem);
 
     return result;

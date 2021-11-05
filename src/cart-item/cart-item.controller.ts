@@ -33,23 +33,24 @@ export class CartItemController {
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.cartItemService.findOne(+id);
+  findOne(@Request() req, @Param('id') id: string) {
+    return this.cartItemService.findOne(req.user.id, +id);
   }
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
   @HttpCode(201)
   update(
+    @Request() req,
     @Param('id') id: string,
     @Body() updateCartItemDto: UpdateCartItemDto,
   ) {
-    return this.cartItemService.update(+id, updateCartItemDto);
+    return this.cartItemService.update(req.user.id, +id, updateCartItemDto);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.cartItemService.remove(+id);
+  remove(@Request() req, @Param('id') id: string) {
+    return this.cartItemService.remove(req.user.id, +id);
   }
 }

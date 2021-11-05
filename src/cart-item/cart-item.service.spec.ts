@@ -15,6 +15,7 @@ import { ProductAlreadyExistsInCartError } from './exceptions/product-already-ex
 import { ProductNotFoundError } from '../product/exceptions/product-not-found.exception';
 import { ProductQuantityLackError } from './exceptions/product-quantity-lack.exception';
 import { CartItemNotFoundError } from './exceptions/cart-item-not-found.exception';
+import { UnauthorizedException } from '@nestjs/common';
 
 describe('CartItemService', () => {
   let cartItemService: CartItemService;
@@ -23,6 +24,7 @@ describe('CartItemService', () => {
   let productService: ProductService;
 
   const userId = faker.datatype.number();
+  const anotherUserId = faker.datatype.number();
   const cartItemId = faker.datatype.number();
   const productId = faker.datatype.number();
   const cartId = faker.datatype.number();
@@ -81,6 +83,15 @@ describe('CartItemService', () => {
   const savedCartItems: CartItemEntity[] = [savedCartItem];
 
   const foundCart: CartEntity = {
+    id: cartId,
+    userId: userId,
+    total: 0,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+    deletedAt: undefined,
+  };
+
+  const foundAnotherCart: CartEntity = {
     id: cartId,
     userId: userId,
     total: 0,
@@ -364,12 +375,18 @@ describe('CartItemService', () => {
         .spyOn(cartItemRepository, 'findOne')
         .mockResolvedValue(savedCartItem);
 
-      const result = await cartItemService.findOne(cartItemId);
+      const cartServiceFindOneByUserIdSpy = jest
+        .spyOn(cartService, 'findOneByUserId')
+        .mockResolvedValue(foundCart);
+
+      const result = await cartItemService.findOne(userId, cartItemId);
 
       expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledWith({
         id: cartItemId,
       });
       expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
+      expect(cartServiceFindOneByUserIdSpy).toHaveBeenCalledWith(userId);
+      expect(cartServiceFindOneByUserIdSpy).toHaveBeenCalledTimes(1);
       expect(result).toStrictEqual(savedCartItem);
     });
 
@@ -379,7 +396,7 @@ describe('CartItemService', () => {
         .mockResolvedValue(undefined);
 
       try {
-        await cartItemService.findOne(cartItemId);
+        await cartItemService.findOne(userId, cartItemId);
       } catch (err) {
         expect(err).toBeInstanceOf(CartItemNotFoundError);
         expect(err.message).toBe('cart item not found');
@@ -390,6 +407,31 @@ describe('CartItemService', () => {
         id: cartItemId,
       });
       expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('unauthorized', async () => {
+      const cartItemRepositoryFindOneSpy = jest
+        .spyOn(cartItemRepository, 'findOne')
+        .mockResolvedValue(savedCartItem);
+
+      const cartServiceFindOneByUserIdSpy = jest
+        .spyOn(cartService, 'findOneByUserId')
+        .mockResolvedValue(foundAnotherCart);
+
+      try {
+        await cartItemService.findOne(userId, cartItemId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(UnauthorizedException);
+        expect(err.message).toBe('cart item not found');
+        expect(err.status).toBe(401);
+      }
+
+      expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledWith({
+        id: cartItemId,
+      });
+      expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
+      expect(cartServiceFindOneByUserIdSpy).toHaveBeenCalledWith(userId);
+      expect(cartServiceFindOneByUserIdSpy).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -416,7 +458,12 @@ describe('CartItemService', () => {
         .spyOn(cartService, 'update')
         .mockResolvedValue(updateCartResultSuccess);
 
+      const cartServiceFindOneByUserIdSpy = jest
+        .spyOn(cartService, 'findOneByUserId')
+        .mockResolvedValue(foundCart);
+
       const result = await cartItemService.update(
+        userId,
         cartItemId,
         updateCartItemDto,
       );
@@ -439,6 +486,8 @@ describe('CartItemService', () => {
         total: updatedTotal,
       });
       expect(cartServiceUpdateSpy).toHaveBeenCalledTimes(1);
+      expect(cartServiceFindOneByUserIdSpy).toHaveBeenCalledWith(userId);
+      expect(cartServiceFindOneByUserIdSpy).toHaveBeenCalledTimes(2);
       expect(result).toStrictEqual(updatedCartItem);
     });
 
@@ -448,7 +497,7 @@ describe('CartItemService', () => {
         .mockResolvedValueOnce(undefined);
 
       try {
-        await cartItemService.update(cartItemId, updateCartItemDto);
+        await cartItemService.update(userId, cartItemId, updateCartItemDto);
       } catch (err) {
         expect(err).toBeInstanceOf(CartItemNotFoundError);
         expect(err.message).toBe('cart item not found');
@@ -471,8 +520,12 @@ describe('CartItemService', () => {
         .spyOn(productService, 'findOne')
         .mockRejectedValue(new ProductNotFoundError());
 
+      const cartServiceFindOneByUserIdSpy = jest
+        .spyOn(cartService, 'findOneByUserId')
+        .mockResolvedValue(foundCart);
+
       try {
-        await cartItemService.update(cartItemId, updateCartItemDto);
+        await cartItemService.update(userId, cartItemId, updateCartItemDto);
       } catch (err) {
         expect(err).toBeInstanceOf(ProductNotFoundError);
         expect(err.message).toBe('product not found');
@@ -485,6 +538,8 @@ describe('CartItemService', () => {
       expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
       expect(productServiceFindOneSpy).toHaveBeenCalledWith(productId);
       expect(productServiceFindOneSpy).toHaveBeenCalledTimes(1);
+      expect(cartServiceFindOneByUserIdSpy).toHaveBeenCalledWith(userId);
+      expect(cartServiceFindOneByUserIdSpy).toHaveBeenCalledTimes(1);
     });
 
     it('product quantity lack', async () => {
@@ -497,8 +552,12 @@ describe('CartItemService', () => {
         .spyOn(productService, 'findOne')
         .mockResolvedValue(foundLackProduct);
 
+      const cartServiceFindOneByUserIdSpy = jest
+        .spyOn(cartService, 'findOneByUserId')
+        .mockResolvedValue(foundCart);
+
       try {
-        await cartItemService.update(cartItemId, updateCartItemDto);
+        await cartItemService.update(userId, cartItemId, updateCartItemDto);
       } catch (err) {
         expect(err).toBeInstanceOf(ProductQuantityLackError);
         expect(err.message).toBe('product quantity lack');
@@ -511,6 +570,8 @@ describe('CartItemService', () => {
       expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
       expect(productServiceFindOneSpy).toHaveBeenCalledWith(productId);
       expect(productServiceFindOneSpy).toHaveBeenCalledTimes(1);
+      expect(cartServiceFindOneByUserIdSpy).toHaveBeenCalledWith(userId);
+      expect(cartServiceFindOneByUserIdSpy).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -524,7 +585,11 @@ describe('CartItemService', () => {
         .spyOn(cartItemRepository, 'softRemove')
         .mockResolvedValue(deletedCartItem);
 
-      const result = await cartItemService.remove(cartItemId);
+      const cartServiceFindOneByUserIdSpy = jest
+        .spyOn(cartService, 'findOneByUserId')
+        .mockResolvedValue(foundCart);
+
+      const result = await cartItemService.remove(userId, cartItemId);
 
       expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledWith({
         id: cartItemId,
@@ -534,6 +599,8 @@ describe('CartItemService', () => {
         savedCartItem,
       );
       expect(cartItemRepositorySoftDeleteSpy).toHaveBeenCalledTimes(1);
+      expect(cartServiceFindOneByUserIdSpy).toHaveBeenCalledWith(userId);
+      expect(cartServiceFindOneByUserIdSpy).toHaveBeenCalledTimes(1);
       expect(result).toStrictEqual(deletedCartItem);
     });
 
@@ -543,13 +610,12 @@ describe('CartItemService', () => {
         .mockResolvedValue(undefined);
 
       try {
-        await cartItemService.remove(cartItemId);
+        await cartItemService.remove(userId, cartItemId);
       } catch (err) {
         expect(err).toBeInstanceOf(CartItemNotFoundError);
         expect(err.message).toBe('cart item not found');
         expect(err.status).toBe(400);
       }
-
       expect(cartItemRepositoryFindOneSpy).toHaveBeenCalledWith({
         id: cartItemId,
       });

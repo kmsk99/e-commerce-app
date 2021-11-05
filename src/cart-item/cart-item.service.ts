@@ -44,12 +44,12 @@ export class CartItemService {
     await this.checkProductQuantity(productId, quantity);
 
     const cartId = thisCart.id;
-    const newCart = new CartItemEntity();
-    newCart.cartId = cartId;
-    newCart.productId = productId;
-    newCart.quantity = quantity;
+    const newCartItem = new CartItemEntity();
+    newCartItem.cartId = cartId;
+    newCartItem.productId = productId;
+    newCartItem.quantity = quantity;
 
-    const result = await this.cartItemRepository.save(newCart);
+    const result = await this.cartItemRepository.save(newCartItem);
 
     await this.calculateTotalPrice(cartId);
 

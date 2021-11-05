@@ -9,6 +9,7 @@ import { isJWT } from 'class-validator';
 describe('AppController (e2e)', () => {
   let app: INestApplication;
   let userAToken: string;
+  let userBToken: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -48,6 +49,12 @@ describe('AppController (e2e)', () => {
       password: faker.internet.password(),
     };
 
+    const userC = {
+      username: faker.internet.userName(),
+      email: faker.internet.email(),
+      password: faker.internet.password(),
+    };
+
     const userLongName = {
       username: '1'.repeat(33),
       email: faker.internet.email(),
@@ -79,10 +86,17 @@ describe('AppController (e2e)', () => {
     };
 
     describe('/register POST', () => {
-      it('register succes', () => {
+      it('register succes userA', () => {
         return request(app.getHttpServer())
           .post('/register')
           .send(userA)
+          .expect(201);
+      });
+
+      it('register succes userB', () => {
+        return request(app.getHttpServer())
+          .post('/register')
+          .send(userB)
           .expect(201);
       });
 
@@ -145,7 +159,7 @@ describe('AppController (e2e)', () => {
     });
 
     describe('/login POST', () => {
-      it('login success', () => {
+      it('login success userA', () => {
         return request(app.getHttpServer())
           .post('/login')
           .send({ username: userA.username, password: userA.password })
@@ -157,10 +171,22 @@ describe('AppController (e2e)', () => {
           });
       });
 
-      it('not exist username', () => {
+      it('login success userA', () => {
         return request(app.getHttpServer())
           .post('/login')
           .send({ username: userB.username, password: userB.password })
+          .expect(201)
+          .expect((response: request.Response) => {
+            const { token }: { token: string } = response.body;
+            userBToken = token;
+            expect(isJWT(token)).toBeTruthy();
+          });
+      });
+
+      it('not exist username', () => {
+        return request(app.getHttpServer())
+          .post('/login')
+          .send({ username: userC.username, password: userC.password })
           .expect(401)
           .expect((response: request.Response) => {
             const { token }: { token: string } = response.body;
@@ -171,7 +197,7 @@ describe('AppController (e2e)', () => {
       it('not matching password', () => {
         return request(app.getHttpServer())
           .post('/login')
-          .send({ username: userA.username, password: userB.password })
+          .send({ username: userA.username, password: userC.password })
           .expect(401)
           .expect((response: request.Response) => {
             const { token }: { token: string } = response.body;
@@ -218,7 +244,7 @@ describe('AppController (e2e)', () => {
 
           it('not exist userId', () => {
             return request(app.getHttpServer())
-              .get('/users/2')
+              .get('/users/3')
               .set('Authorization', `Bearer ${userAToken}`)
               .expect({
                 statusCode: 400,
@@ -553,6 +579,7 @@ describe('AppController (e2e)', () => {
               expect(result[0]).toHaveProperty('quantity', productA.quantity);
             });
         });
+
         it('category 2 return success', () => {
           return request(app.getHttpServer())
             .get('/products/search?category=2')
@@ -569,6 +596,7 @@ describe('AppController (e2e)', () => {
               expect(result[0]).toHaveProperty('quantity', productB.quantity);
             });
         });
+
         it('category 3 not found', () => {
           return request(app.getHttpServer())
             .get('/products/search?category=3')
@@ -715,6 +743,16 @@ describe('AppController (e2e)', () => {
               error: 'Bad Request',
             });
         });
+
+        it('Unauthorized', () => {
+          return request(app.getHttpServer())
+            .get('/cart/1')
+            .set('Authorization', `Bearer ${userBToken}`)
+            .expect({
+              statusCode: 401,
+              message: 'Unauthorized',
+            });
+        });
       });
 
       describe('PATCH', () => {
@@ -746,6 +784,17 @@ describe('AppController (e2e)', () => {
               error: 'Bad Request',
             });
         });
+
+        it('Unauthorized', () => {
+          return request(app.getHttpServer())
+            .patch('/cart/1')
+            .send({ quantity: 20 })
+            .set('Authorization', `Bearer ${userBToken}`)
+            .expect({
+              statusCode: 401,
+              message: 'Unauthorized',
+            });
+        });
       });
 
       describe('DELETE', () => {
@@ -775,7 +824,36 @@ describe('AppController (e2e)', () => {
               error: 'Bad Request',
             });
         });
+
+        it('Unauthorized', () => {
+          return request(app.getHttpServer())
+            .delete('/cart/1')
+            .set('Authorization', `Bearer ${userBToken}`)
+            .expect({
+              statusCode: 401,
+              message: 'Unauthorized',
+            });
+        });
       });
+    });
+  });
+
+  describe('/payment', () => {
+    describe('POST', () => {
+      it.todo('userA success');
+      it.todo('userB success');
+    });
+    describe('DELETE', () => {
+      it.todo('userB success');
+      it.todo('userB fails');
+    });
+    describe('GET', () => {
+      it.todo('userA success');
+      it.todo('userB fails');
+    });
+    describe('PATCH', () => {
+      it.todo('userA success');
+      it.todo('userB fails');
     });
   });
 

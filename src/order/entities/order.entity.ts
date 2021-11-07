@@ -1,6 +1,5 @@
 import { PaymentEntity } from '@root/payment/entities/payment.entity';
 import {
-  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
   Column,
@@ -16,14 +15,14 @@ export class OrderEntity {
   id: number;
 
   @ManyToOne(() => UserEntity, (users) => users.id)
-  @JoinColumn({ name: 'user_id' })
+  @Column({ name: 'user_id' })
   userId: number;
 
   @ManyToOne(() => PaymentEntity, (payment) => payment.id)
-  @JoinColumn({ name: 'payment_id' })
+  @Column({ name: 'payment_id' })
   paymentId: number;
 
-  @Column({ type: 'decimal' })
+  @Column({ type: 'decimal', default: 0 })
   total: number;
 
   @CreateDateColumn({ name: 'created_at' })

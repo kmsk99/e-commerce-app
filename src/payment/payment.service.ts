@@ -3,17 +3,13 @@ import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UpdatePaymentDto } from './dto/update-payment.dto';
 import { PaymentRepository } from './payment.repository';
 import { validate } from 'class-validator';
-import { UserService } from '../user/user.service';
 import { PaymentAlreadyExistsException } from './exceptions/payment-already-exists.exception';
 import { PaymentEntity } from './entities/payment.entity';
 import { PaymentNotFoundError } from './exceptions/pament-not-found.exception';
 
 @Injectable()
 export class PaymentService {
-  constructor(
-    private readonly paymentRepository: PaymentRepository,
-    private readonly userService: UserService,
-  ) {}
+  constructor(private readonly paymentRepository: PaymentRepository) {}
 
   async create(userId: number, createPaymentDto: CreatePaymentDto) {
     const validation_error = await validate(createPaymentDto);

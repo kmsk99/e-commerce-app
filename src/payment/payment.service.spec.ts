@@ -26,8 +26,6 @@ describe('PaymentService', () => {
   const updatedUpdatedAt = faker.date.recent();
   const deletedAt = faker.date.recent();
 
-  const request = { user: { id: userId, username: username } };
-
   const createPaymentDto: CreatePaymentDto = {
     provider: provider,
   };

@@ -1,6 +1,5 @@
 import {
   Entity,
-  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
   Column,
@@ -16,12 +15,12 @@ export class OrderItemEntity {
   id: number;
 
   @ManyToOne(() => ProductEntity, (product) => product.id)
-  @JoinColumn({ name: 'product_id' })
+  @Column({ name: 'product_id' })
   productId: number;
 
   @ManyToOne(() => OrderEntity, (order) => order.id)
-  @JoinColumn({ name: 'user_id' })
-  userId: number;
+  @Column({ name: 'order_id' })
+  orderId: number;
 
   @Column()
   quantity: number;

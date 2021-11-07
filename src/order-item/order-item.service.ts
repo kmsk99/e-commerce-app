@@ -1,26 +1,64 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { OrderService } from '@root/order/order.service';
 import { CreateOrderItemDto } from './dto/create-order-item.dto';
-import { UpdateOrderItemDto } from './dto/update-order-item.dto';
+import { validate } from 'class-validator';
+import { OrderItemRepository } from './order-item.repository';
+import { OrderItemEntity } from './entities/order-item.entity';
+import { CartItemService } from '@root/cart-item/cart-item.service';
+import { OrderItemNotFoundError } from './exceptions/order-item-not-found.exception';
 
 @Injectable()
-export class OrderItemsService {
-  create(createOrderItemDto: CreateOrderItemDto) {
-    return 'This action adds a new orderItem';
+export class OrderItemService {
+  constructor(
+    private readonly orderService: OrderService,
+    private readonly cartItemService: CartItemService,
+    private readonly orderItemRepository: OrderItemRepository,
+  ) {}
+
+  async create(userId: number, createOrderItemDto: CreateOrderItemDto) {
+    const validation_error = await validate(createOrderItemDto);
+    if (validation_error.length > 0) {
+      throw new HttpException(validation_error, HttpStatus.BAD_REQUEST);
+    }
+
+    const { orderId, productId, quantity } = createOrderItemDto;
+
+    await this.orderService.findOne(userId, orderId);
+    await this.cartItemService.checkProductQuantity(productId, quantity);
+
+    const newOrderItem = new OrderItemEntity();
+    newOrderItem.orderId = orderId;
+    newOrderItem.productId = productId;
+    newOrderItem.quantity = quantity;
+
+    const result = await this.orderItemRepository.save(newOrderItem);
+
+    return result;
   }
 
-  findAll() {
-    return `This action returns all orderItems`;
+  async findAll(userId: number, orderId: number) {
+    const thisOrder = await this.orderService.findOne(userId, orderId);
+
+    const thisOrderItems = await this.orderItemRepository.find({
+      where: { orderId: orderId },
+    });
+
+    const result = { orderItems: thisOrderItems, ...thisOrder };
+
+    return result;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} orderItem`;
-  }
+  async findOne(userId: number, orderItemId: number) {
+    const result = await this.orderItemRepository.findOne({
+      where: { id: orderItemId },
+    });
 
-  update(id: number, updateOrderItemDto: UpdateOrderItemDto) {
-    return `This action updates a #${id} orderItem`;
-  }
+    if (!result) {
+      throw new OrderItemNotFoundError();
+    }
 
-  remove(id: number) {
-    return `This action removes a #${id} orderItem`;
+    await this.orderService.findOne(userId, result.orderId);
+
+    return result;
   }
 }

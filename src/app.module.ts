@@ -6,11 +6,13 @@ import { CartModule } from '@root/cart/cart.module';
 import { ProductModule } from '@root/product/product.module';
 import { CartItemModule } from '@root/cart-item/cart-item.module';
 import { OrderModule } from '@root/order/order.module';
-import { OrderItemsModule } from '@root/order-item/order-item.module';
+import { OrderItemModule } from '@root/order-item/order-item.module';
 import { PaymentModule } from '@root/payment/payment.module';
 import { AuthModule } from '@root/auth/auth.module';
 import { CategoryModule } from '@root/category/category.module';
 import { ConfigModule } from '@nestjs/config';
+import { CheckoutService } from './checkout/checkout.service';
+import { CheckoutModule } from './checkout/checkout.module';
 
 @Module({
   imports: [
@@ -39,11 +41,13 @@ import { ConfigModule } from '@nestjs/config';
     ProductModule,
     CartItemModule,
     OrderModule,
-    OrderItemsModule,
+    OrderItemModule,
     PaymentModule,
     AuthModule,
     CategoryModule,
+    CheckoutModule,
   ],
   controllers: [AppController],
+  providers: [CheckoutService],
 })
 export class AppModule {}

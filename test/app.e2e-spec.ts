@@ -980,7 +980,11 @@ describe('AppController (e2e)', () => {
     });
   });
 
-  describe('/cart/{cartId}/checkout', () => {
+  describe('/cart/checkout', () => {
+    it.todo('POST');
+  });
+
+  describe('/products/:id/checkout', () => {
     it.todo('POST');
   });
 

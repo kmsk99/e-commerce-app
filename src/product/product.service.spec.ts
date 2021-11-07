@@ -10,6 +10,7 @@ import { UpdateResult } from 'typeorm';
 import { CategoryEntity } from '@root/category/entities/category.entity';
 import { CategoryService } from '@root/category/category.service';
 import { CategoryNotFoundError } from '@root/category/exceptions/category-not-found.exception';
+import { ProductQuantityLackError } from '@root/cart-item/exceptions/product-quantity-lack.exception';
 
 describe('ProductService', () => {
   let productService: ProductService;
@@ -380,6 +381,53 @@ describe('ProductService', () => {
       } catch (err) {
         expect(err).toBeInstanceOf(ProductNotFoundError);
         expect(err.message).toBe('product not found');
+        expect(err.status).toBe(400);
+      }
+
+      expect(productRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
+      expect(productRepositoryFindOneSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('sold', () => {
+    it('success', async () => {
+      const findParam = {
+        where: { id: productId },
+      };
+
+      const productRepositoryFindOneSpy = jest
+        .spyOn(productRepository, 'findOne')
+        .mockResolvedValue(savedProduct);
+
+      const productRepositoryUpdateSpy = jest
+        .spyOn(productRepository, 'update')
+        .mockResolvedValue(updateResultSuccess);
+
+      const result = await productService.sold(productId, quantity - 2);
+
+      expect(productRepositoryFindOneSpy).toHaveBeenCalledWith(findParam);
+      expect(productRepositoryFindOneSpy).toHaveBeenCalledTimes(2);
+      expect(productRepositoryUpdateSpy).toHaveBeenCalledWith(productId, {
+        quantity: 2,
+      });
+      expect(productRepositoryUpdateSpy).toHaveBeenCalledTimes(1);
+      expect(result).toBe(savedProduct);
+    });
+
+    it('product quantity lack', async () => {
+      const findParam = {
+        where: { id: productId },
+      };
+
+      const productRepositoryFindOneSpy = jest
+        .spyOn(productRepository, 'findOne')
+        .mockResolvedValue(savedProduct);
+
+      try {
+        await productService.sold(productId, quantity + 2);
+      } catch (err) {
+        expect(err).toBeInstanceOf(ProductQuantityLackError);
+        expect(err.message).toBe('product quantity lack');
         expect(err.status).toBe(400);
       }
 

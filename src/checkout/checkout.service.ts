@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CartItemService } from '@root/cart-item/cart-item.service';
+import { ProductQuantityLackError } from '@root/cart-item/exceptions/product-quantity-lack.exception';
 import { OrderItemService } from '@root/order-item/order-item.service';
 import { OrderService } from '@root/order/order.service';
 import { PaymentService } from '@root/payment/payment.service';
@@ -39,6 +40,7 @@ export class CheckoutService {
         quantity: cartItem.quantity,
       };
 
+      await this.productService.sold(orderItem.productId, orderItem.quantity);
       await this.orderItemService.create(userId, orderItem);
     }
 
@@ -58,6 +60,10 @@ export class CheckoutService {
 
     const thisProduct = await this.productService.findOne(productId);
 
+    if (thisProduct.quantity < quantity) {
+      throw new ProductQuantityLackError();
+    }
+
     const total = thisProduct.price * quantity;
 
     const thisOrder = await this.orderService.create(userId, { total: total });
@@ -68,6 +74,7 @@ export class CheckoutService {
       quantity: quantity,
     };
 
+    await this.productService.sold(orderItem.productId, orderItem.quantity);
     await this.orderItemService.create(userId, orderItem);
 
     const result = await this.orderItemService.findAll(userId, thisOrder.id);

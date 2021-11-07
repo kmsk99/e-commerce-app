@@ -17,6 +17,7 @@ import { CartItemEntity } from '../cart-item/entities/cart-item.entity';
 import { CartEmptyError } from './exceptions/cart-empty.exception';
 import { ProductEntity } from '@root/product/entities/product.entity';
 import { ProductNotFoundError } from '../product/exceptions/product-not-found.exception';
+import { ProductQuantityLackError } from '../cart-item/exceptions/product-quantity-lack.exception';
 
 describe('CheckoutService', () => {
   let checkoutService: CheckoutService;
@@ -115,7 +116,10 @@ describe('CheckoutService', () => {
           useValue: { create: jest.fn(), findAll: jest.fn() },
         },
         { provide: CartItemService, useValue: { findAll: jest.fn() } },
-        { provide: ProductService, useValue: { findOne: jest.fn() } },
+        {
+          provide: ProductService,
+          useValue: { findOne: jest.fn(), sold: jest.fn() },
+        },
         { provide: PaymentService, useValue: { findOne: jest.fn() } },
         { provide: AuthService, useValue: { validateUser: jest.fn() } },
       ],
@@ -138,65 +142,6 @@ describe('CheckoutService', () => {
     expect(productService).toBeDefined();
     expect(paymentService).toBeDefined();
     expect(authService).toBeDefined();
-  });
-
-  describe('checkPassword', () => {
-    it('success', async () => {
-      const authServiceValidateUserSpy = jest.spyOn(
-        authService,
-        'validateUser',
-      );
-
-      const paymentServiceFindOne = jest.spyOn(paymentService, 'findOne');
-
-      await checkoutService.checkPassword(userId, username, password);
-
-      expect(authServiceValidateUserSpy).toBeCalledWith(username, password);
-      expect(authServiceValidateUserSpy).toBeCalledTimes(1);
-      expect(paymentServiceFindOne).toBeCalledWith(userId);
-      expect(paymentServiceFindOne).toBeCalledTimes(1);
-    });
-
-    it('Unauthorized', async () => {
-      const authServiceValidateUserSpy = jest
-        .spyOn(authService, 'validateUser')
-        .mockRejectedValue(new UnauthorizedException());
-
-      try {
-        await checkoutService.checkPassword(userId, username, password);
-      } catch (err) {
-        expect(err).toBeInstanceOf(UnauthorizedException);
-        expect(err.message).toBe('Unauthorized');
-        expect(err.status).toBe(401);
-      }
-
-      expect(authServiceValidateUserSpy).toBeCalledWith(username, password);
-      expect(authServiceValidateUserSpy).toBeCalledTimes(1);
-    });
-
-    it('payment not found', async () => {
-      const authServiceValidateUserSpy = jest.spyOn(
-        authService,
-        'validateUser',
-      );
-
-      const paymentServiceFindOne = jest
-        .spyOn(paymentService, 'findOne')
-        .mockRejectedValue(new PaymentNotFoundError());
-
-      try {
-        await checkoutService.checkPassword(userId, username, password);
-      } catch (err) {
-        expect(err).toBeInstanceOf(PaymentNotFoundError);
-        expect(err.message).toBe('payment not found');
-        expect(err.status).toBe(400);
-      }
-
-      expect(authServiceValidateUserSpy).toBeCalledWith(username, password);
-      expect(authServiceValidateUserSpy).toBeCalledTimes(1);
-      expect(paymentServiceFindOne).toBeCalledWith(userId);
-      expect(paymentServiceFindOne).toBeCalledTimes(1);
-    });
   });
 
   describe('purchaseCart', () => {
@@ -364,6 +309,99 @@ describe('CheckoutService', () => {
       expect(paymentServiceFindOne).toBeCalledTimes(1);
       expect(productServiceFindOneSpy).toBeCalledWith(productId);
       expect(productServiceFindOneSpy).toBeCalledTimes(1);
+    });
+
+    it('product quantity lack', async () => {
+      const authServiceValidateUserSpy = jest.spyOn(
+        authService,
+        'validateUser',
+      );
+
+      const paymentServiceFindOne = jest.spyOn(paymentService, 'findOne');
+
+      const productServiceFindOneSpy = jest
+        .spyOn(productService, 'findOne')
+        .mockResolvedValue(foundProduct);
+
+      try {
+        await checkoutService.purchaseOne(
+          userId,
+          username,
+          productId,
+          password,
+          quantity + 5,
+        );
+      } catch (err) {
+        expect(err).toBeInstanceOf(ProductQuantityLackError);
+        expect(err.message).toBe('product quantity lack');
+        expect(err.status).toBe(400);
+      }
+
+      expect(authServiceValidateUserSpy).toBeCalledWith(username, password);
+      expect(authServiceValidateUserSpy).toBeCalledTimes(1);
+      expect(paymentServiceFindOne).toBeCalledWith(userId);
+      expect(paymentServiceFindOne).toBeCalledTimes(1);
+      expect(productServiceFindOneSpy).toBeCalledWith(productId);
+      expect(productServiceFindOneSpy).toBeCalledTimes(1);
+    });
+  });
+
+  describe('checkPassword', () => {
+    it('success', async () => {
+      const authServiceValidateUserSpy = jest.spyOn(
+        authService,
+        'validateUser',
+      );
+
+      const paymentServiceFindOne = jest.spyOn(paymentService, 'findOne');
+
+      await checkoutService.checkPassword(userId, username, password);
+
+      expect(authServiceValidateUserSpy).toBeCalledWith(username, password);
+      expect(authServiceValidateUserSpy).toBeCalledTimes(1);
+      expect(paymentServiceFindOne).toBeCalledWith(userId);
+      expect(paymentServiceFindOne).toBeCalledTimes(1);
+    });
+
+    it('Unauthorized', async () => {
+      const authServiceValidateUserSpy = jest
+        .spyOn(authService, 'validateUser')
+        .mockRejectedValue(new UnauthorizedException());
+
+      try {
+        await checkoutService.checkPassword(userId, username, password);
+      } catch (err) {
+        expect(err).toBeInstanceOf(UnauthorizedException);
+        expect(err.message).toBe('Unauthorized');
+        expect(err.status).toBe(401);
+      }
+
+      expect(authServiceValidateUserSpy).toBeCalledWith(username, password);
+      expect(authServiceValidateUserSpy).toBeCalledTimes(1);
+    });
+
+    it('payment not found', async () => {
+      const authServiceValidateUserSpy = jest.spyOn(
+        authService,
+        'validateUser',
+      );
+
+      const paymentServiceFindOne = jest
+        .spyOn(paymentService, 'findOne')
+        .mockRejectedValue(new PaymentNotFoundError());
+
+      try {
+        await checkoutService.checkPassword(userId, username, password);
+      } catch (err) {
+        expect(err).toBeInstanceOf(PaymentNotFoundError);
+        expect(err.message).toBe('payment not found');
+        expect(err.status).toBe(400);
+      }
+
+      expect(authServiceValidateUserSpy).toBeCalledWith(username, password);
+      expect(authServiceValidateUserSpy).toBeCalledTimes(1);
+      expect(paymentServiceFindOne).toBeCalledWith(userId);
+      expect(paymentServiceFindOne).toBeCalledTimes(1);
     });
   });
 });

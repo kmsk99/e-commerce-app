@@ -340,6 +340,14 @@ describe('CartItemService', () => {
         .spyOn(cartItemRepository, 'find')
         .mockResolvedValue(savedCartItems);
 
+      const productServiceFindOneSpy = jest
+        .spyOn(productService, 'findOne')
+        .mockResolvedValue(foundEnoughProduct);
+
+      const cartServiceUpdateSpy = jest
+        .spyOn(cartService, 'update')
+        .mockResolvedValue(updateCartResultSuccess);
+
       const result = await cartItemService.findAll(userId);
 
       expect(cartServiceFindOneByUserId).toHaveBeenCalledWith(userId);
@@ -347,7 +355,13 @@ describe('CartItemService', () => {
       expect(cartItemRepositoryFindSpy).toHaveBeenCalledWith({
         cartId: cartId,
       });
-      expect(cartItemRepositoryFindSpy).toHaveBeenCalledTimes(1);
+      expect(cartItemRepositoryFindSpy).toHaveBeenCalledTimes(2);
+      expect(productServiceFindOneSpy).toHaveBeenCalledWith(productId);
+      expect(productServiceFindOneSpy).toHaveBeenCalledTimes(2);
+      expect(cartServiceUpdateSpy).toHaveBeenCalledWith(cartId, {
+        total: updatedTotal,
+      });
+      expect(cartServiceUpdateSpy).toHaveBeenCalledTimes(1);
       expect(result).toStrictEqual(cartAndCartItems);
     });
 

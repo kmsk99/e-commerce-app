@@ -1,4 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { ProductQuantityLackError } from '@root/cart-item/exceptions/product-quantity-lack.exception';
 import { CategoryService } from '@root/category/category.service';
 import { validate } from 'class-validator';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -75,6 +76,22 @@ export class ProductService {
   async remove(id: number) {
     const thisProduct = await this.findOne(id);
     const result = await this.productRepository.softRemove(thisProduct);
+
+    return result;
+  }
+
+  async sold(id: number, quantity: number) {
+    const thisProduct = await this.findOne(id);
+
+    if (thisProduct.quantity - quantity < 0) {
+      throw new ProductQuantityLackError();
+    }
+
+    await this.productRepository.update(id, {
+      quantity: thisProduct.quantity - quantity,
+    });
+
+    const result = await this.findOne(id);
 
     return result;
   }

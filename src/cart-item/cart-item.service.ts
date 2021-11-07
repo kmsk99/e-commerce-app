@@ -58,9 +58,15 @@ export class CartItemService {
 
   async findAll(userId: number) {
     const thisCart = await this.cartService.findOneByUserId(userId);
+    await this.calculateTotalPrice(thisCart.id);
     const cartItems = await this.cartItemRepository.find({
       cartId: thisCart.id,
     });
+
+    for (const cartItem of cartItems) {
+      await this.checkProductQuantity(cartItem.productId, cartItem.quantity);
+    }
+
     const result = { cartItems: cartItems, ...thisCart };
     return result;
   }

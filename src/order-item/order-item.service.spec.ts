@@ -4,7 +4,6 @@ import * as faker from 'faker';
 import { OrderItemEntity } from './entities/order-item.entity';
 import { OrderService } from '@root/order/order.service';
 import { OrderItemRepository } from './order-item.repository';
-import { CartItemService } from '@root/cart-item/cart-item.service';
 import { OrderEntity } from '../order/entities/order.entity';
 import { ProductEntity } from '../product/entities/product.entity';
 import { CreateOrderItemDto } from './dto/create-order-item.dto';
@@ -13,12 +12,13 @@ import { UnauthorizedException } from '@nestjs/common';
 import { ProductNotFoundError } from '@root/product/exceptions/product-not-found.exception';
 import { ProductQuantityLackError } from '@root/cart-item/exceptions/product-quantity-lack.exception';
 import { OrderItemNotFoundError } from './exceptions/order-item-not-found.exception';
+import { ProductService } from '@root/product/product.service';
 
 describe('OrderItemService', () => {
   let orderItemService: OrderItemService;
   let orderItemRepository: OrderItemRepository;
   let orderService: OrderService;
-  let cartItemService: CartItemService;
+  let productService: ProductService;
 
   const orderItemId = faker.datatype.number();
   const orderId = faker.datatype.number();
@@ -28,7 +28,6 @@ describe('OrderItemService', () => {
   const total = +faker.commerce.price();
   const createdAt = faker.date.recent();
   const updatedAt = faker.date.recent();
-  const anotherUserId = faker.datatype.number();
   const randomProductName = faker.commerce.productName();
   const randomProductPrice = +faker.commerce.price();
   const categoryId = faker.datatype.number();
@@ -80,8 +79,8 @@ describe('OrderItemService', () => {
         OrderItemRepository,
         { provide: OrderService, useValue: { findOne: jest.fn() } },
         {
-          provide: CartItemService,
-          useValue: { checkProductQuantity: jest.fn() },
+          provide: ProductService,
+          useValue: { sold: jest.fn() },
         },
       ],
     }).compile();
@@ -89,14 +88,14 @@ describe('OrderItemService', () => {
     orderItemService = module.get<OrderItemService>(OrderItemService);
     orderItemRepository = module.get<OrderItemRepository>(OrderItemRepository);
     orderService = module.get<OrderService>(OrderService);
-    cartItemService = module.get<CartItemService>(CartItemService);
+    productService = module.get<ProductService>(ProductService);
   });
 
   it('should be defined', () => {
     expect(orderItemService).toBeDefined();
     expect(orderItemRepository).toBeDefined();
     expect(orderService).toBeDefined();
-    expect(cartItemService).toBeDefined();
+    expect(productService).toBeDefined();
   });
 
   describe('create', () => {
@@ -105,8 +104,8 @@ describe('OrderItemService', () => {
         .spyOn(orderService, 'findOne')
         .mockResolvedValue(savedOrder);
 
-      const cartItemServiceCheckProductQuantitySpy = jest
-        .spyOn(cartItemService, 'checkProductQuantity')
+      const productServiceCheckProductQuantitySpy = jest
+        .spyOn(productService, 'sold')
         .mockResolvedValue(foundProduct);
 
       const orderItemRepositorySaveSpy = jest
@@ -117,11 +116,11 @@ describe('OrderItemService', () => {
 
       expect(orderServiceFindOneSpy).toBeCalledWith(userId, orderId);
       expect(orderServiceFindOneSpy).toBeCalledTimes(1);
-      expect(cartItemServiceCheckProductQuantitySpy).toBeCalledWith(
+      expect(productServiceCheckProductQuantitySpy).toBeCalledWith(
         productId,
         quantity,
       );
-      expect(cartItemServiceCheckProductQuantitySpy).toBeCalledTimes(1);
+      expect(productServiceCheckProductQuantitySpy).toBeCalledTimes(1);
       expect(orderItemRepositorySaveSpy).toBeCalledWith(createOrderItemDto);
       expect(orderItemRepositorySaveSpy).toBeCalledTimes(1);
       expect(result).toBe(savedOrderItem);
@@ -166,8 +165,8 @@ describe('OrderItemService', () => {
         .spyOn(orderService, 'findOne')
         .mockResolvedValue(savedOrder);
 
-      const cartItemServiceCheckProductQuantitySpy = jest
-        .spyOn(cartItemService, 'checkProductQuantity')
+      const productServiceCheckProductQuantitySpy = jest
+        .spyOn(productService, 'sold')
         .mockRejectedValue(new ProductNotFoundError());
 
       try {
@@ -180,11 +179,11 @@ describe('OrderItemService', () => {
 
       expect(orderServiceFindOneSpy).toBeCalledWith(userId, orderId);
       expect(orderServiceFindOneSpy).toBeCalledTimes(1);
-      expect(cartItemServiceCheckProductQuantitySpy).toBeCalledWith(
+      expect(productServiceCheckProductQuantitySpy).toBeCalledWith(
         productId,
         quantity,
       );
-      expect(cartItemServiceCheckProductQuantitySpy).toBeCalledTimes(1);
+      expect(productServiceCheckProductQuantitySpy).toBeCalledTimes(1);
     });
 
     it('product quantity lack', async () => {
@@ -192,8 +191,8 @@ describe('OrderItemService', () => {
         .spyOn(orderService, 'findOne')
         .mockResolvedValue(savedOrder);
 
-      const cartItemServiceCheckProductQuantitySpy = jest
-        .spyOn(cartItemService, 'checkProductQuantity')
+      const productServiceCheckProductQuantitySpy = jest
+        .spyOn(productService, 'sold')
         .mockRejectedValue(new ProductQuantityLackError());
 
       try {
@@ -206,11 +205,11 @@ describe('OrderItemService', () => {
 
       expect(orderServiceFindOneSpy).toBeCalledWith(userId, orderId);
       expect(orderServiceFindOneSpy).toBeCalledTimes(1);
-      expect(cartItemServiceCheckProductQuantitySpy).toBeCalledWith(
+      expect(productServiceCheckProductQuantitySpy).toBeCalledWith(
         productId,
         quantity,
       );
-      expect(cartItemServiceCheckProductQuantitySpy).toBeCalledTimes(1);
+      expect(productServiceCheckProductQuantitySpy).toBeCalledTimes(1);
     });
   });
 

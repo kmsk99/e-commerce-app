@@ -110,7 +110,10 @@ describe('CheckoutService', () => {
           provide: OrderItemService,
           useValue: { create: jest.fn(), findAll: jest.fn() },
         },
-        { provide: CartItemService, useValue: { findAll: jest.fn() } },
+        {
+          provide: CartItemService,
+          useValue: { findAll: jest.fn(), remove: jest.fn() },
+        },
         {
           provide: ProductService,
           useValue: { findOne: jest.fn(), sold: jest.fn() },
@@ -157,6 +160,8 @@ describe('CheckoutService', () => {
 
       const CartServiceRemoveSpy = jest.spyOn(cartService, 'remove');
 
+      const CartItemServiceRemoveSpy = jest.spyOn(cartItemService, 'remove');
+
       const orderItemServiceFindAllSpy = jest
         .spyOn(orderItemService, 'findAll')
         .mockResolvedValue(returnOrderItems);
@@ -177,6 +182,8 @@ describe('CheckoutService', () => {
       expect(orderItemServiceCreateSpy).toBeCalledTimes(1);
       expect(CartServiceRemoveSpy).toBeCalledWith(cartId);
       expect(CartServiceRemoveSpy).toBeCalledTimes(1);
+      expect(CartItemServiceRemoveSpy).toBeCalledWith(userId, cartItemId);
+      expect(CartItemServiceRemoveSpy).toBeCalledTimes(1);
       expect(orderItemServiceFindAllSpy).toBeCalledWith(userId, orderId);
       expect(orderItemServiceFindAllSpy).toBeCalledTimes(1);
       expect(result).toBe(returnOrderItems);

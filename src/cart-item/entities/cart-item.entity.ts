@@ -8,7 +8,7 @@ import {
   DeleteDateColumn,
 } from 'typeorm';
 import { ProductEntity } from '@root/product/entities/product.entity';
-import { UserEntity } from '@root/user/entities/user.entity';
+import { CartEntity } from '@root/cart/entities/cart.entity';
 
 @Entity('cart-item')
 export class CartItemEntity {
@@ -19,7 +19,7 @@ export class CartItemEntity {
   @Column({ name: 'product_id' })
   productId: number;
 
-  @ManyToOne(() => UserEntity, (users) => users.id)
+  @ManyToOne(() => CartEntity, (cart) => cart.id)
   @Column({ name: 'cart_id' })
   cartId: number;
 

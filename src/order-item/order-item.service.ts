@@ -4,15 +4,15 @@ import { CreateOrderItemDto } from './dto/create-order-item.dto';
 import { validate } from 'class-validator';
 import { OrderItemRepository } from './order-item.repository';
 import { OrderItemEntity } from './entities/order-item.entity';
-import { CartItemService } from '@root/cart-item/cart-item.service';
 import { OrderItemNotFoundError } from './exceptions/order-item-not-found.exception';
+import { ProductService } from '@root/product/product.service';
 
 @Injectable()
 export class OrderItemService {
   constructor(
     private readonly orderService: OrderService,
-    private readonly cartItemService: CartItemService,
     private readonly orderItemRepository: OrderItemRepository,
+    private readonly productService: ProductService,
   ) {}
 
   async create(userId: number, createOrderItemDto: CreateOrderItemDto) {
@@ -24,7 +24,7 @@ export class OrderItemService {
     const { orderId, productId, quantity } = createOrderItemDto;
 
     await this.orderService.findOne(userId, orderId);
-    await this.cartItemService.checkProductQuantity(productId, quantity);
+    await this.productService.sold(productId, quantity);
 
     const newOrderItem = new OrderItemEntity();
     newOrderItem.orderId = orderId;

@@ -141,7 +141,9 @@ export class CartItemService {
     const thisProduct = await this.productService.findOne(productId);
 
     if (thisProduct.quantity < quantity) {
-      throw new ProductQuantityLackError();
+      throw new ProductQuantityLackError(
+        `ProductId ${productId} has ${thisProduct.quantity} items. claimed ${quantity} items`,
+      );
     }
 
     return thisProduct;

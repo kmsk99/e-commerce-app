@@ -655,7 +655,7 @@ describe('AppController (e2e)', () => {
           .expect({
             statusCode: 400,
             message: 'product quantity lack',
-            error: 'Bad Request',
+            error: 'ProductId 2 has 10 items. claimed 20 items',
           });
       });
 
@@ -779,7 +779,7 @@ describe('AppController (e2e)', () => {
             });
         });
 
-        it('failt productB change to 20', () => {
+        it('fail productB change to 20', () => {
           return request(app.getHttpServer())
             .patch('/cart/2')
             .send({ quantity: 20 })
@@ -787,7 +787,7 @@ describe('AppController (e2e)', () => {
             .expect({
               statusCode: 400,
               message: 'product quantity lack',
-              error: 'Bad Request',
+              error: 'ProductId 2 has 10 items. claimed 20 items',
             });
         });
 
@@ -991,7 +991,6 @@ describe('AppController (e2e)', () => {
       it('success', () => {
         return request(app.getHttpServer())
           .post('/cart/checkout')
-          .send({ password: userApassword })
           .set('Authorization', `Bearer ${userAToken}`)
           .expect(201)
           .expect((response: request.Response) => {
@@ -1005,19 +1004,154 @@ describe('AppController (e2e)', () => {
           });
       });
 
-      it.todo('cart empty');
-      it.todo('Unauthorized');
+      it('cart empty', () => {
+        return request(app.getHttpServer())
+          .post('/cart/checkout')
+          .set('Authorization', `Bearer ${userAToken}`)
+          .expect({
+            statusCode: 400,
+            message: 'cart empty',
+            error: 'Bad Request',
+          });
+      });
+
+      it('Unauthorized', () => {
+        return request(app.getHttpServer())
+          .post('/cart/checkout')
+          .set('Authorization', `Bearer ${'randomjwt'}`)
+          .expect({ statusCode: 401, message: 'Unauthorized' });
+      });
+
+      it('payment not found', () => {
+        return request(app.getHttpServer())
+          .post('/cart/checkout')
+          .set('Authorization', `Bearer ${userBToken}`)
+          .expect({
+            statusCode: 400,
+            message: 'payment not found',
+            error: 'Bad Request',
+          });
+      });
     });
   });
 
   describe('/products/:id/checkout', () => {
-    it.todo('POST');
+    describe('POST', () => {
+      it('success', () => {
+        return request(app.getHttpServer())
+          .post('/products/1/checkout')
+          .send({ quantity: 20 })
+          .set('Authorization', `Bearer ${userAToken}`)
+          .expect(201)
+          .expect((response: request.Response) => {
+            expect(response.body).toHaveProperty('id', 2);
+            expect(response.body).toHaveProperty('userId', 1);
+            expect(response.body).toHaveProperty('paymentId', 1);
+            expect(response.body).toHaveProperty('total');
+            expect(response.body).toHaveProperty('createdAt');
+            expect(response.body).toHaveProperty('updatedAt');
+            expect(response.body).toHaveProperty('orderItems');
+          });
+      });
+
+      it('product B quantity lack', () => {
+        return request(app.getHttpServer())
+          .post('/products/2/checkout')
+          .send({ quantity: 20 })
+          .set('Authorization', `Bearer ${userAToken}`)
+          .expect({
+            statusCode: 400,
+            message: 'product quantity lack',
+            error: 'ProductId 2 has 10 items. claimed 20 items',
+          });
+      });
+
+      it('payment not found', () => {
+        return request(app.getHttpServer())
+          .post('/products/1/checkout')
+          .send({ quantity: 20 })
+          .set('Authorization', `Bearer ${userBToken}`)
+          .expect({
+            statusCode: 400,
+            message: 'payment not found',
+            error: 'Bad Request',
+          });
+      });
+    });
   });
 
   describe('/order', () => {
-    it.todo('GET');
+    describe('GET', () => {
+      it('success userA', () => {
+        return request(app.getHttpServer())
+          .get('/order')
+          .set('Authorization', `Bearer ${userAToken}`)
+          .expect(200)
+          .expect((respone) => {
+            const result = respone.body;
+            expect(result.length).toBe(2);
+          });
+      });
+
+      it('success userB', () => {
+        return request(app.getHttpServer())
+          .get('/order')
+          .set('Authorization', `Bearer ${userBToken}`)
+          .expect(200)
+          .expect((respone) => {
+            const result = respone.body;
+            expect(result.length).toBe(0);
+          });
+      });
+
+      it('Unauthorized', () => {
+        return request(app.getHttpServer())
+          .get('/order')
+          .set('Authorization', `Bearer ${'randomjwt'}`)
+          .expect({ statusCode: 401, message: 'Unauthorized' });
+      });
+    });
     describe('/{orderId}', () => {
-      it.todo('GET');
+      describe('GET', () => {
+        it('userA order1 success', () => {
+          return request(app.getHttpServer())
+            .get('/order/1')
+            .set('Authorization', `Bearer ${userAToken}`)
+            .expect(200)
+            .expect((response: request.Response) => {
+              expect(response.body).toHaveProperty('id', 1);
+              expect(response.body).toHaveProperty('userId', 1);
+              expect(response.body).toHaveProperty('paymentId', 1);
+              expect(response.body).toHaveProperty('total');
+              expect(response.body).toHaveProperty('createdAt');
+              expect(response.body).toHaveProperty('updatedAt');
+              expect(response.body).toHaveProperty('orderItems');
+            });
+        });
+
+        it('userA order1 success', () => {
+          return request(app.getHttpServer())
+            .get('/order/2')
+            .set('Authorization', `Bearer ${userAToken}`)
+            .expect(200)
+            .expect((response: request.Response) => {
+              expect(response.body).toHaveProperty('id', 2);
+              expect(response.body).toHaveProperty('userId', 1);
+              expect(response.body).toHaveProperty('paymentId', 1);
+              expect(response.body).toHaveProperty('total');
+              expect(response.body).toHaveProperty('createdAt');
+              expect(response.body).toHaveProperty('updatedAt');
+              expect(response.body).toHaveProperty('orderItems');
+            });
+        });
+
+        it('Unauthorized', () => {
+          return request(app.getHttpServer())
+            .get('/order/1')
+            .set('Authorization', `Bearer ${userBToken}`)
+            .expect({ statusCode: 401, message: 'Unauthorized' });
+        });
+      });
     });
   });
 });

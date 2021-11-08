@@ -62,9 +62,13 @@ export class ProductService {
   }
 
   async update(id: number, updateProductDto: UpdateProductDto) {
+    const { name, categoryId, price, quantity } = updateProductDto;
+
     await this.findOne(id);
 
-    await this.categoryService.findOne(updateProductDto.categoryId);
+    if (categoryId) {
+      await this.categoryService.findOne(categoryId);
+    }
 
     await this.productRepository.update(id, updateProductDto);
 
@@ -83,8 +87,10 @@ export class ProductService {
   async sold(id: number, quantity: number) {
     const thisProduct = await this.findOne(id);
 
-    if (thisProduct.quantity - quantity < 0) {
-      throw new ProductQuantityLackError();
+    if (thisProduct.quantity < quantity) {
+      throw new ProductQuantityLackError(
+        `ProductId ${id} has ${thisProduct.quantity} items. claimed ${quantity} items`,
+      );
     }
 
     await this.productRepository.update(id, {

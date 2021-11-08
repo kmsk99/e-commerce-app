@@ -24,23 +24,21 @@ export class CheckoutService {
 
     const cartItems = await this.cartItemService.findAll(userId);
 
-    const thisOrder = await this.orderService.create(userId, {
-      total: cartItems.total,
-    });
-
     if (cartItems.cartItems.length === 0) {
       throw new CartEmptyError();
     }
 
+    const thisOrder = await this.orderService.create(userId, {
+      total: cartItems.total,
+    });
+
     for (const cartItem of cartItems.cartItems) {
-      const orderItem = {
+      await this.orderItemService.create(userId, {
         orderId: thisOrder.id,
         productId: cartItem.productId,
         quantity: cartItem.quantity,
-      };
-
-      await this.productService.sold(orderItem.productId, orderItem.quantity);
-      await this.orderItemService.create(userId, orderItem);
+      });
+      await this.cartItemService.remove(userId, cartItem.id);
     }
 
     await this.cartService.remove(cartItems.id);
@@ -56,7 +54,9 @@ export class CheckoutService {
     const thisProduct = await this.productService.findOne(productId);
 
     if (thisProduct.quantity < quantity) {
-      throw new ProductQuantityLackError();
+      throw new ProductQuantityLackError(
+        `ProductId ${productId} has ${thisProduct.quantity} items. claimed ${quantity} items`,
+      );
     }
 
     const total = thisProduct.price * quantity;
@@ -69,7 +69,6 @@ export class CheckoutService {
       quantity: quantity,
     };
 
-    await this.productService.sold(orderItem.productId, orderItem.quantity);
     await this.orderItemService.create(userId, orderItem);
 
     const result = await this.orderItemService.findAll(userId, thisOrder.id);

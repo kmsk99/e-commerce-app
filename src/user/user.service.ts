@@ -68,26 +68,4 @@ export class UserService {
     const { password, hashPassword, ...restResult } = result;
     return restResult;
   }
-
-  // async findAll() {
-  //   const allUsernames = await this.userRepository.find({
-  //     select: ['id', 'username', 'email', 'createdAt', 'updatedAt'],
-  //   });
-  //   return allUsernames;
-  // }
-
-  // async update(username: string, updateUserDto: UpdateUserDto) {
-  //   const thisUser = await this.userRepository.findOne({ username: username });
-  //   if (!thisUser) {
-  //     throw new UserNotFoundException();
-  //   }
-  //   this.userRepository.update(thisUser.id, { ...updateUserDto });
-  //   return this.findOne(username);
-  // }
-
-  // async remove(username: string) {
-  //   this.findOne(username);
-  //   await this.userRepository.delete({ username: username });
-  //   return 'Successfully deleted';
-  // }
 }

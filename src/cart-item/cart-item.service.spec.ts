@@ -24,7 +24,6 @@ describe('CartItemService', () => {
   let productService: ProductService;
 
   const userId = faker.datatype.number();
-  const anotherUserId = faker.datatype.number();
   const cartItemId = faker.datatype.number();
   const productId = faker.datatype.number();
   const cartId = faker.datatype.number();

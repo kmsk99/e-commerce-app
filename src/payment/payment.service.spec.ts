@@ -17,7 +17,6 @@ describe('PaymentService', () => {
 
   const paymentId = faker.datatype.number();
   const userId = faker.datatype.number();
-  const username = faker.internet.userName();
   const provider = faker.finance.creditCardNumber();
   const updatedProvider = faker.finance.creditCardNumber();
   const status = true;

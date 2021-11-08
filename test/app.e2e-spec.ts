@@ -10,8 +10,6 @@ describe('AppController (e2e)', () => {
   let app: INestApplication;
   let userAToken: string;
   let userBToken: string;
-  let userApassword: string;
-  let userBpassword: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -50,9 +48,6 @@ describe('AppController (e2e)', () => {
       email: faker.internet.email(),
       password: faker.internet.password(),
     };
-
-    userApassword = userA.password;
-    userBpassword = userB.password;
 
     const userC = {
       username: faker.internet.userName(),

@@ -6,13 +6,13 @@ import * as argon2 from 'argon2';
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly UserService: UserService,
+    private readonly userService: UserService,
     private readonly jwtService: JwtService,
   ) {}
 
   async validateUser(username: string, pass: string) {
     try {
-      const user = await this.UserService.findOnePassword(username);
+      const user = await this.userService.findOnePassword(username);
       if (user && (await argon2.verify(user.password, pass))) {
         const { password, ...result } = user;
         return result;

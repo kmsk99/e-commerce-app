@@ -762,7 +762,7 @@ describe('AppController (e2e)', () => {
             .patch('/cart/1')
             .send({ quantity: 30 })
             .set('Authorization', `Bearer ${userAToken}`)
-            .expect(201)
+            .expect(200)
             .expect((response: request.Response) => {
               expect(response.body).toHaveProperty('id', 1);
               expect(response.body).toHaveProperty('productId', 1);
@@ -896,7 +896,7 @@ describe('AppController (e2e)', () => {
         return request(app.getHttpServer())
           .delete('/payment')
           .set('Authorization', `Bearer ${userBToken}`)
-          .expect(201)
+          .expect(200)
           .expect((response: request.Response) => {
             expect(response.body).toHaveProperty('id', 2);
             expect(response.body).toHaveProperty('userId', 2);
@@ -955,7 +955,7 @@ describe('AppController (e2e)', () => {
           .patch('/payment')
           .send({ provider: updatedProvider })
           .set('Authorization', `Bearer ${userAToken}`)
-          .expect(201)
+          .expect(200)
           .expect((response: request.Response) => {
             expect(response.body).toHaveProperty('id', 1);
             expect(response.body).toHaveProperty('userId', 1);

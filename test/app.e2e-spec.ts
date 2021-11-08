@@ -10,6 +10,8 @@ describe('AppController (e2e)', () => {
   let app: INestApplication;
   let userAToken: string;
   let userBToken: string;
+  let userApassword: string;
+  let userBpassword: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -48,6 +50,9 @@ describe('AppController (e2e)', () => {
       email: faker.internet.email(),
       password: faker.internet.password(),
     };
+
+    userApassword = userA.password;
+    userBpassword = userB.password;
 
     const userC = {
       username: faker.internet.userName(),
@@ -229,6 +234,7 @@ describe('AppController (e2e)', () => {
             });
         });
       });
+
       describe('/{userId}', () => {
         describe('GET', () => {
           it('userId 1 return', () => {
@@ -981,7 +987,27 @@ describe('AppController (e2e)', () => {
   });
 
   describe('/cart/checkout', () => {
-    it.todo('POST');
+    describe('POST', () => {
+      it('success', () => {
+        return request(app.getHttpServer())
+          .post('/cart/checkout')
+          .send({ password: userApassword })
+          .set('Authorization', `Bearer ${userAToken}`)
+          .expect(201)
+          .expect((response: request.Response) => {
+            expect(response.body).toHaveProperty('id', 1);
+            expect(response.body).toHaveProperty('userId', 1);
+            expect(response.body).toHaveProperty('paymentId', 1);
+            expect(response.body).toHaveProperty('total');
+            expect(response.body).toHaveProperty('createdAt');
+            expect(response.body).toHaveProperty('updatedAt');
+            expect(response.body).toHaveProperty('orderItems');
+          });
+      });
+
+      it.todo('cart empty');
+      it.todo('Unauthorized');
+    });
   });
 
   describe('/products/:id/checkout', () => {

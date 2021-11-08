@@ -20,12 +20,10 @@ describe('CheckoutController', () => {
   const total = +faker.commerce.price();
   const createdAt = faker.date.recent();
   const updatedAt = faker.date.recent();
-  const password = faker.internet.password();
 
   const request = { user: { id: userId, username: username } };
 
   const purchaseOneDto: PurchaseOneDto = {
-    password: password,
     quantity: quantity,
   };
 
@@ -77,13 +75,9 @@ describe('CheckoutController', () => {
         .spyOn(checkoutService, 'purchaseCart')
         .mockResolvedValue(returnOrderItems);
 
-      const result = await checkoutController.purchaseCart(request, password);
+      const result = await checkoutController.purchaseCart(request);
 
-      expect(checkoutServicePurchaseCartSpy).toHaveBeenCalledWith(
-        userId,
-        username,
-        password,
-      );
+      expect(checkoutServicePurchaseCartSpy).toHaveBeenCalledWith(userId);
       expect(checkoutServicePurchaseCartSpy).toBeCalledTimes(1);
       expect(result).toBe(returnOrderItems);
     });
@@ -103,9 +97,7 @@ describe('CheckoutController', () => {
 
       expect(checkoutServicePurchaseOneSpy).toHaveBeenCalledWith(
         userId,
-        username,
         productId,
-        password,
         quantity,
       );
       expect(checkoutServicePurchaseOneSpy).toBeCalledTimes(1);

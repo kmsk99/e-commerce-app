@@ -5,8 +5,8 @@ import { OrderItemModule } from '@root/order-item/order-item.module';
 import { CartItemModule } from '@root/cart-item/cart-item.module';
 import { ProductModule } from '@root/product/product.module';
 import { CheckoutController } from './checkout.controller';
-import { AuthModule } from '@root/auth/auth.module';
 import { PaymentModule } from '../payment/payment.module';
+import { CartModule } from '@root/cart/cart.module';
 
 @Module({
   imports: [
@@ -15,7 +15,7 @@ import { PaymentModule } from '../payment/payment.module';
     CartItemModule,
     ProductModule,
     PaymentModule,
-    AuthModule,
+    CartModule,
   ],
   controllers: [CheckoutController],
   providers: [CheckoutService],

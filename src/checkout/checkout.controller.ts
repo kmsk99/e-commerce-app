@@ -16,12 +16,8 @@ export class CheckoutController {
 
   @UseGuards(JwtAuthGuard)
   @Post('cart/checkout')
-  purchaseCart(@Request() req, @Body() password: string) {
-    return this.checkoutService.purchaseCart(
-      req.user.id,
-      req.user.username,
-      password,
-    );
+  purchaseCart(@Request() req) {
+    return this.checkoutService.purchaseCart(req.user.id);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -33,9 +29,7 @@ export class CheckoutController {
   ) {
     return this.checkoutService.purchaseOne(
       req.user.id,
-      req.user.username,
       +id,
-      purchaseOneDto.password,
       purchaseOneDto.quantity,
     );
   }

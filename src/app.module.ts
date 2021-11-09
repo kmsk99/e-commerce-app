@@ -19,15 +19,16 @@ import { CheckoutModule } from './checkout/checkout.module';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: process.env.NODE_ENV === 'dev' ? '.env.dev' : '.env.test',
-      ignoreEnvFile: process.env.NODE_ENV === 'prod',
+      ignoreEnvFile: process.env.NODE_ENV === 'production',
     }),
     TypeOrmModule.forRoot({
+      url: process.env.DATABASE_URL,
       type: 'postgres',
-      host: process.env.DB_HOST,
-      port: parseInt(process.env.DB_PORT),
-      username: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
+      // host: process.env.DB_HOST,
+      // port: parseInt(process.env.DB_PORT),
+      // username: process.env.DB_USERNAME,
+      // password: process.env.DB_PASSWORD,
+      // database: process.env.DB_NAME,
       entities:
         process.env.NODE_ENV === 'test'
           ? [__dirname + '/../**/*.entity.{js,ts}']

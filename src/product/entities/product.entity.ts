@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { CategoryEntity } from '@root/category/entities/Category.entity';
+import { CategoryEntity } from '../../category/entities/category.entity';
 import {
   Column,
   CreateDateColumn,

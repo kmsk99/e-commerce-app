@@ -33,6 +33,10 @@ import { CheckoutModule } from './checkout/checkout.module';
         process.env.NODE_ENV === 'test'
           ? [__dirname + '/../**/*.entity.{js,ts}']
           : [__dirname + '/**/*.entity.{js,ts}'],
+      ssl: {
+        require: true,
+        rejectUnauthorized: false,
+      },
       logging: true,
       autoLoadEntities: true,
       synchronize: true,
